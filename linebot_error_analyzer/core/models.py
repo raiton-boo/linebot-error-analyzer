@@ -150,23 +150,23 @@ class LineErrorInfo:
         if not isinstance(self.status_code, int) or (
             self.status_code != 0 and not (100 <= self.status_code <= 999)
         ):
-            raise ValueError(f"無効なステータスコードです: {self.status_code}")
+            raise ValueError(f"Invalid status_code: {self.status_code}")
 
         if not isinstance(self.message, str) or not self.message.strip():
-            raise ValueError(f"無効なメッセージです: {self.message}")
+            raise ValueError(f"Invalid message: {self.message}")
 
         if not isinstance(self.category, ErrorCategory):
             raise TypeError(
-                f"categoryはErrorCategoryである必要があります。取得した型: {type(self.category)}"
+                f"category must be ErrorCategory, got {type(self.category)}"
             )
 
         if not isinstance(self.severity, ErrorSeverity):
             raise TypeError(
-                f"severityはErrorSeverityである必要があります。取得した型: {type(self.severity)}"
+                f"severity must be ErrorSeverity, got {type(self.severity)}"
             )
 
         if not isinstance(self.is_retryable, bool):
-            raise TypeError(f"is_retryableはbool型である必要があります。取得した型: {type(self.is_retryable)}")
+            raise TypeError(f"is_retryable must be bool, got {type(self.is_retryable)}")
 
     def to_dict(self) -> "AnalysisResultDict":
         """辞書形式で出力"""

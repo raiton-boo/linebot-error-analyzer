@@ -207,7 +207,7 @@ class BaseLineErrorAnalyzer:
             )
 
         except Exception as e:
-            raise AnalyzerError(f"レスポンス形式オブジェクトの分析に失敗しました: {str(e)}", e)
+            raise AnalyzerError(f"Failed to analyze response-like object: {str(e)}", e)
 
     # ========== ヘルパーメソッド ==========
 
@@ -333,7 +333,7 @@ class BaseLineErrorAnalyzer:
         try:
             # ログ文字列を解析
             if not self.log_parser.is_parseable(log_string):
-                raise AnalyzerError(f"ログ文字列を解析できません: {log_string[:100]}...")
+                raise AnalyzerError(f"Log string is not parseable: {log_string[:100]}...")
             
             parsed = self.log_parser.parse(log_string)
             
@@ -385,8 +385,8 @@ class BaseLineErrorAnalyzer:
             
         except Exception as e:
             raise AnalyzerError(
-                f"ログ文字列の分析に失敗しました: {str(e)}。"
-                f"ログ抜粋: {log_string[:100]}...",
+                f"Failed to analyze log string: {str(e)}. "
+                f"Log snippet: {log_string[:100]}...",
                 e,
             )
 

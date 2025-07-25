@@ -68,7 +68,7 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
         except UnsupportedErrorTypeError:
             raise
         except Exception as e:
-            raise AnalyzerError(f"エラーの分析に失敗しました: {str(e)}", e)
+            raise AnalyzerError(f"Failed to analyze error: {str(e)}", e)
 
     async def analyze_multiple(
         self, errors: List["SupportedErrorType"]
@@ -230,7 +230,7 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
             )
 
         except Exception as e:
-            raise AnalyzerError(f"v3 ApiExceptionの分析に失敗しました: {str(e)}", e)
+            raise AnalyzerError(f"Failed to analyze v3 ApiException: {str(e)}", e)
 
     async def _analyze_v2(self, error: Any) -> LineErrorInfo:
         """v2系 LineBotApiError の非同期分析"""
@@ -264,7 +264,7 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
             )
 
         except Exception as e:
-            raise AnalyzerError(f"v2 LineBotApiErrorの分析に失敗しました: {str(e)}", e)
+            raise AnalyzerError(f"Failed to analyze v2 LineBotApiError: {str(e)}", e)
 
     async def _analyze_dict(self, error: Dict[str, Any]) -> LineErrorInfo:
         """辞書形式のエラーデータを非同期分析"""
