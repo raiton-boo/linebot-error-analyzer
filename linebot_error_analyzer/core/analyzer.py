@@ -58,8 +58,8 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
                 return self._analyze_response(error)
             else:
                 raise UnsupportedErrorTypeError(
-                    f"Unsupported error type: {type(error)}. "
-                    f"Supported types: SDK exceptions, dict, HTTP response objects, log strings"
+                    f"サポートされていないエラータイプです: {type(error)}。"
+                    f"対応タイプ: SDK例外、辞書、HTTPレスポンスオブジェクト、ログ文字列"
                 )
 
         except UnsupportedErrorTypeError:
@@ -68,7 +68,7 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
         except Exception as e:
             # 予期しないエラーはAnalyzerErrorでラップして詳細情報を付加
             raise AnalyzerError(
-                f"Failed to analyze error: {str(e)}. Error type: {type(error)}", e
+                f"エラーの分析に失敗しました: {str(e)}。エラータイプ: {type(error)}", e
             )
 
     def analyze_log(
@@ -201,8 +201,8 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
 
         except Exception as e:
             raise AnalyzerError(
-                f"Failed to analyze v3 ApiException: {str(e)}. "
-                f"Error attributes: {[attr for attr in dir(error) if not attr.startswith('_')]}",
+                f"v3 ApiExceptionの分析に失敗しました: {str(e)}。"
+                f"エラー属性: {[attr for attr in dir(error) if not attr.startswith('_')]}",
                 e,
             )
 
@@ -250,4 +250,4 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
             )
 
         except Exception as e:
-            raise AnalyzerError(f"Failed to analyze v2 LineBotApiError: {str(e)}", e)
+            raise AnalyzerError(f"v2 LineBotApiErrorの分析に失敗しました: {str(e)}", e)
