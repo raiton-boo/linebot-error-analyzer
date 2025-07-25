@@ -47,7 +47,7 @@ def read_requirements():
 
 
 setup(
-    name="line-bot-error-analyzer",
+    name="linebot-error-analyzer",
     version=get_version(),
     author="らいとん",
     author_email="raitosongwe@gmail.com",
