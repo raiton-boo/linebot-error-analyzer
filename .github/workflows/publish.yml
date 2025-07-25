@@ -1,0 +1,42 @@
+name: PyPI Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+          pip install typing_extensions>=4.0.0
+
+      - name: Clean previous builds
+        run: |
+          rm -rf dist/
+          rm -rf build/
+          rm -rf *.egg-info/
+
+      - name: Build package
+        run: python -m build
+
+      - name: Verify package version
+        run: |
+          python -c "import line_bot_error_analyzer; print(f'Package version: {line_bot_error_analyzer.__version__}')"
+          ls -la dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}

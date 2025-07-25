@@ -1,0 +1,28 @@
+# 開発・テスト用の依存関係
+# このファイルは開発環境用です。PyPI公開時は setup.py の extras_require を使用してください。
+# LINE Bot SDK Python >= 3.9 に合わせて最適化
+
+# 基本開発依存関係（推奨: pip install -e .[dev] または pip install -e .[all]）
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.0.0
+
+# パフォーマンステスト・監視用
+psutil>=5.9.0
+
+# 型ヒント（Python 3.9-3.12 に必要）
+typing_extensions>=4.0.0
+
+# コード品質（推奨: pip install -e .[quality]）
+black>=24.0.0
+flake8>=7.0.0 
+mypy>=1.8.0
+
+# ドキュメント生成（推奨: pip install -e .[docs]）
+sphinx>=7.0.0
+sphinx-rtd-theme>=2.0.0
+
+# LINE Bot SDK統合テスト用（オプション: pip install -e .[line-sdk]）
+# line-bot-sdk>=3.0.0
+
+# 実行時依存関係: なし（標準ライブラリのみ使用）
