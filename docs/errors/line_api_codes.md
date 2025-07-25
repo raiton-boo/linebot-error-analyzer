@@ -60,7 +60,7 @@ LINE API のエラーコードは以下の体系で構成されています：
 **分析例:**
 
 ```python
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 analyzer = LineErrorAnalyzer()
 

@@ -6,13 +6,13 @@ LINE Bot エラー分析器の使用時によくある問題と解決方法を�
 
 ### 1. インポートエラー
 
-#### 問題: `ImportError: No module named 'line_bot_error_analyzer'`
+#### 問題: `ImportError: No module named 'linebot_error_analyzer'`
 
 **症状**:
 
 ```python
->>> from line_bot_error_analyzer import LineErrorAnalyzer
-ImportError: No module named 'line_bot_error_analyzer'
+>>> from linebot_error_analyzer import LineErrorAnalyzer
+ImportError: No module named 'linebot_error_analyzer'
 ```
 
 **原因と解決方法**:
@@ -25,7 +25,7 @@ ImportError: No module named 'line_bot_error_analyzer'
 
    # line-api-error-python ディレクトリにいることを確認
    ls -la
-   # line_bot_error_analyzer/ ディレクトリが存在することを確認
+   # linebot_error_analyzer/ ディレクトリが存在することを確認
 
    # Pythonパスに追加
    export PYTHONPATH="${PYTHONPATH}:$(pwd)"
@@ -35,8 +35,8 @@ ImportError: No module named 'line_bot_error_analyzer'
 
    ```bash
    # 正しい構造かチェック
-   tree line_bot_error_analyzer/
-   # 📁 line_bot_error_analyzer/
+   tree linebot_error_analyzer/
+   # 📁 linebot_error_analyzer/
    # ├── __init__.py
    # ├── analyzer.py
    # ├── async_analyzer.py
@@ -47,7 +47,7 @@ ImportError: No module named 'line_bot_error_analyzer'
    ```bash
    # プロジェクトルートで実行していることを確認
    cd /path/to/line-api-error-python
-   python -c "from line_bot_error_analyzer import LineErrorAnalyzer; print('OK')"
+   python -c "from linebot_error_analyzer import LineErrorAnalyzer; print('OK')"
    ```
 
 #### 問題: `ImportError: attempted relative import with no known parent package`

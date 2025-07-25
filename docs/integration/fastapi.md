@@ -8,7 +8,7 @@ LINE Bot Error Analyzer を FastAPI アプリケーションに統合する方�
 
 ```bash
 pip install fastapi uvicorn
-pip install line-bot-error-analyzer
+pip install linebot-error-analyzer
 pip install line-bot-sdk  # LINE Bot SDK
 ```
 
@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 from linebot.v3.messaging import ApiClient, Configuration, MessagingApi
 from linebot.v3.messaging.exceptions import ApiException
 from linebot.v3.exceptions import InvalidSignatureError
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 app = FastAPI(title="LINE Bot with Error Analysis")
 analyzer = LineErrorAnalyzer()

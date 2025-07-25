@@ -11,7 +11,7 @@ import re
 def get_version():
     """バージョンを __init__.py から取得"""
     version_file = os.path.join(
-        os.path.dirname(__file__), "line_bot_error_analyzer", "__init__.py"
+        os.path.dirname(__file__), "linebot_error_analyzer", "__init__.py"
     )
     if os.path.exists(version_file):
         with open(version_file, "r", encoding="utf-8") as f:
@@ -54,12 +54,12 @@ setup(
     description="LINE Bot SDK のエラーを自動分析・診断するライブラリ",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/raiton-boo/line-bot-error-analyzer",
+    url="https://github.com/raiton-boo/linebot-error-analyzer",
     project_urls={
-        "Bug Reports": "https://github.com/raiton-boo/line-bot-error-analyzer/issues",
-        "Source": "https://github.com/raiton-boo/line-bot-error-analyzer",
-        "Documentation": "https://github.com/raiton-boo/line-bot-error-analyzer/tree/main/docs",
-        "Changelog": "https://github.com/raiton-boo/line-bot-error-analyzer/releases",
+        "Bug Reports": "https://github.com/raiton-boo/linebot-error-analyzer/issues",
+        "Source": "https://github.com/raiton-boo/linebot-error-analyzer",
+        "Documentation": "https://github.com/raiton-boo/linebot-error-analyzer/tree/main/docs",
+        "Changelog": "https://github.com/raiton-boo/linebot-error-analyzer/releases",
     },
     packages=find_packages(exclude=["tests*", "examples*"]),
     classifiers=[
@@ -118,7 +118,7 @@ setup(
     },
     # パッケージデータの設定
     package_data={
-        "line_bot_error_analyzer": ["py.typed"],  # 型ヒント情報
+        "linebot_error_analyzer": ["py.typed"],  # 型ヒント情報
     },
     include_package_data=True,
     zip_safe=False,

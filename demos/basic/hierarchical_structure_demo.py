@@ -18,8 +18,8 @@ import os
 # プロジェクトルートを追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from line_bot_error_analyzer.database.error_database import ErrorDatabase
-from line_bot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
+from linebot_error_analyzer.database.error_database import ErrorDatabase
+from linebot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
 
 
 def demonstrate_hierarchical_structure():

@@ -65,7 +65,7 @@ python demos/integration/fastapi_demo.py
 - 出力形式の例
 
 ```python
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 analyzer = LineErrorAnalyzer()
 result = analyzer.analyze({"status_code": 401, "message": "Invalid token"})
@@ -168,7 +168,7 @@ python demos/basic/simple_analysis_demo.py
 pip install -e .
 
 # または、パッケージをインストール
-pip install line-bot-error-analyzer
+pip install linebot-error-analyzer
 ```
 
 ### デモが実行できない場合

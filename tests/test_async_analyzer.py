@@ -5,8 +5,8 @@
 import asyncio
 import unittest
 from unittest.mock import Mock, patch
-from line_bot_error_analyzer import AsyncLineErrorAnalyzer, ErrorCategory, ErrorSeverity
-from line_bot_error_analyzer.exceptions import AnalyzerError
+from linebot_error_analyzer import AsyncLineErrorAnalyzer, ErrorCategory, ErrorSeverity
+from linebot_error_analyzer.exceptions import AnalyzerError
 
 
 class TestAsyncLineErrorAnalyzer(unittest.IsolatedAsyncioTestCase):

@@ -33,7 +33,7 @@ jobs:
 
       - name: Verify package version
         run: |
-          python -c "import line_bot_error_analyzer; print(f'Package version: {line_bot_error_analyzer.__version__}')"
+          python -c "import linebot_error_analyzer; print(f'Package version: {linebot_error_analyzer.__version__}')"
           ls -la dist/
 
       - name: Publish to PyPI

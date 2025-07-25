@@ -1,7 +1,7 @@
 # 🤖 LINE Bot Error Analyzer
 
-[![PyPI version](https://badge.fury.io/py/line-bot-error-analyzer.svg)](https://badge.fury.io/py/line-bot-error-analyzer)
-[![Python](https://img.shields.io/pypi/pyversions/line-bot-error-analyzer.svg)](https://pypi.org/project/line-bot-error-analyzer/)
+[![PyPI version](https://badge.fury.io/py/linebot-error-analyzer.svg)](https://badge.fury.io/py/linebot-error-analyzer)
+[![Python](https://img.shields.io/pypi/pyversions/linebot-error-analyzer.svg)](https://pypi.org/project/linebot-error-analyzer/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 LINE Bot のエラーを自動分析・診断する Python ライブラリです。
@@ -27,23 +27,23 @@ LINE Bot のエラーを自動分析・診断する Python ライブラリです
 ### 基本インストール
 
 ```bash
-pip install line-bot-error-analyzer
+pip install linebot-error-analyzer
 ```
 
 ### 開発環境用（テスト依存関係含む）
 
 ```bash
-pip install line-bot-error-analyzer[dev]
+pip install linebot-error-analyzer[dev]
 ```
 
 ### LINE Bot SDK と一緒にインストール
 
 ```bash
 # LINE Bot SDK v3 と一緒に
-pip install line-bot-error-analyzer line-bot-sdk
+pip install linebot-error-analyzer linebot-sdk
 
 # または全依存関係込み
-pip install line-bot-error-analyzer[all]
+pip install linebot-error-analyzer[all]
 ```
 
 ### 対応環境
@@ -55,7 +55,7 @@ pip install line-bot-error-analyzer[all]
 ## 基本的な使用方法
 
 ```python
-from line-bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 analyzer = LineErrorAnalyzer()
 
@@ -76,9 +76,9 @@ print(f"リトライ可能: {result.is_retryable}")  # False
 ## LINE Bot SDK との統合
 
 ```python
-from line-bot.v3.messaging import ApiClient, MessagingApi
-from line-bot.v3.messaging.exceptions import ApiException
-from line-bot_error_analyzer import LineErrorAnalyzer
+from linebot.v3.messaging import ApiClient, MessagingApi
+from linebot.v3.messaging.exceptions import ApiException
+from linebot_error_analyzer import LineErrorAnalyzer
 
 analyzer = LineErrorAnalyzer()
 
@@ -100,7 +100,7 @@ except ApiException as e:
 
 ```python
 import asyncio
-from line-bot_error_analyzer import AsyncLineErrorAnalyzer
+from linebot_error_analyzer import AsyncLineErrorAnalyzer
 
 async def analyze_errors():
     analyzer = AsyncLineErrorAnalyzer()
@@ -158,7 +158,7 @@ asyncio.run(analyze_errors())
 ```python
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from line-bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 app = FastAPI()
 analyzer = LineErrorAnalyzer()
@@ -197,5 +197,5 @@ MIT License
 ## 参考リンク
 
 - [LINE Messaging API リファレンス](https://developers.line.biz/ja/reference/messaging-api/)
-- [LINE Bot SDK for Python](https://github.com/line/line-bot-sdk-python)
+- [LINE Bot SDK for Python](https://github.com/line/linebot-sdk-python)
 - [LINE Developers](https://developers.line.biz/ja/)

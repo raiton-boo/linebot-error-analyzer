@@ -5,8 +5,8 @@
 import unittest
 from unittest.mock import Mock, patch
 import json
-from line_bot_error_analyzer import LineErrorAnalyzer, AsyncLineErrorAnalyzer
-from line_bot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
+from linebot_error_analyzer import LineErrorAnalyzer, AsyncLineErrorAnalyzer
+from linebot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
 
 
 class TestLineSDKIntegration(unittest.TestCase):

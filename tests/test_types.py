@@ -4,14 +4,14 @@
 
 import unittest
 from typing import Dict, Any, List
-from line_bot_error_analyzer import (
+from linebot_error_analyzer import (
     LineErrorAnalyzer,
     AsyncLineErrorAnalyzer,
     ErrorCategory,
     ErrorSeverity,
 )
-from line_bot_error_analyzer.core.models import LineErrorInfo
-from line_bot_error_analyzer.utils.types import (
+from linebot_error_analyzer.core.models import LineErrorInfo
+from linebot_error_analyzer.utils.types import (
     StatusCode,
     ErrorMessage,
     RequestId,
@@ -28,7 +28,7 @@ from line_bot_error_analyzer.utils.types import (
     is_line_bot_v3_exception,
     is_line_bot_v2_error,
 )
-from line_bot_error_analyzer.exceptions import AnalyzerError
+from linebot_error_analyzer.exceptions import AnalyzerError
 
 
 class TestTypeValidation(unittest.TestCase):

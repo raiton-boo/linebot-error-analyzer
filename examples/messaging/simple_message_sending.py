@@ -21,7 +21,7 @@ from linebot.v3.messaging import (
     FlexMessage,
     FlexContainer,
 )
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 
 # 設定とエラーハンドリング
@@ -259,7 +259,7 @@ if __name__ == "__main__":
 
 import json
 import os
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 
 def send_reply_message(

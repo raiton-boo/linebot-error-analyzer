@@ -19,7 +19,7 @@ pip install --upgrade twine
 
 ### 1. バージョン更新
 
-`line_bot_error_analyzer/__init__.py` の `__version__` を更新
+`linebot_error_analyzer/__init__.py` の `__version__` を更新
 
 ### 2. パッケージビルド
 
@@ -38,7 +38,7 @@ python -m build
 twine upload --repository testpypi dist/*
 
 # テストインストール
-pip install --index-url https://test.pypi.org/simple/ line-bot-error-analyzer
+pip install --index-url https://test.pypi.org/simple/ linebot-error-analyzer
 ```
 
 ### 4. 本番 PyPI に公開

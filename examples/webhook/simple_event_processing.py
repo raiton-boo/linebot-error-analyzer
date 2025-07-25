@@ -26,7 +26,7 @@ from linebot.v3.webhooks import (
     UnfollowEvent,
     PostbackEvent,
 )
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 
 # 設定とエラーハンドリング
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 import json
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 
 def handle_line_event(event: dict) -> dict:

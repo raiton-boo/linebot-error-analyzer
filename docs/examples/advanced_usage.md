@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from collections import defaultdict
-from line_bot_error_analyzer import AsyncLineErrorAnalyzer
+from linebot_error_analyzer import AsyncLineErrorAnalyzer
 
 @dataclass
 class ServiceConfig:

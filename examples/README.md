@@ -292,7 +292,7 @@ def webhook():
 ### エラーアナライザーのカスタマイズ
 
 ```python
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 # カスタム設定でアナライザーを初期化
 analyzer = LineErrorAnalyzer()

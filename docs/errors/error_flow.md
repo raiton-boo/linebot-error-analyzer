@@ -47,7 +47,7 @@ graph TD
 ### 基本的なエラー検出フロー
 
 ```python
-from line_bot_error_analyzer import AsyncLineErrorAnalyzer
+from linebot_error_analyzer import AsyncLineErrorAnalyzer
 from line_bot_error_detective.core.models import ErrorCategory, ErrorSeverity
 import asyncio
 from typing import Dict, Any, List, Optional

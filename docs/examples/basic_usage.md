@@ -15,7 +15,7 @@ LINE Bot エラー分析器の基本的な使用方法を実際のコード例�
 ### 簡単なエラー分析
 
 ```python
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 # 分析器を作成
 analyzer = LineErrorAnalyzer()
@@ -74,7 +74,7 @@ print(f"対処法: {result.recommended_action}")
 from linebot.v3.messaging import ApiClient, Configuration, MessagingApi
 from linebot.v3.messaging.exceptions import ApiException
 from linebot.v3.messaging.models import ReplyMessageRequest, TextMessage
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 # LINE Bot の設定
 configuration = Configuration(access_token='YOUR_CHANNEL_ACCESS_TOKEN')
@@ -311,7 +311,7 @@ def retry_request():
 
 ```python
 import asyncio
-from line_bot_error_analyzer import AsyncLineErrorAnalyzer
+from linebot_error_analyzer import AsyncLineErrorAnalyzer
 
 async def basic_async_analysis():
     """基本的な非同期エラー分析"""

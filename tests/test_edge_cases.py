@@ -5,14 +5,14 @@
 import unittest
 from unittest.mock import Mock, patch
 import json
-from line_bot_error_analyzer import (
+from linebot_error_analyzer import (
     LineErrorAnalyzer,
     AsyncLineErrorAnalyzer,
     ErrorCategory,
     ErrorSeverity,
 )
-from line_bot_error_analyzer.core.models import LineErrorInfo
-from line_bot_error_analyzer.exceptions import AnalyzerError, UnsupportedErrorTypeError
+from linebot_error_analyzer.core.models import LineErrorInfo
+from linebot_error_analyzer.exceptions import AnalyzerError, UnsupportedErrorTypeError
 
 
 class TestEdgeCases(unittest.TestCase):
@@ -393,7 +393,7 @@ class TestErrorRecovery(unittest.TestCase):
 
     def test_recovery_from_corrupted_database(self):
         """破損したデータベースからの回復テスト"""
-        from line_bot_error_analyzer.exceptions import AnalyzerError
+        from linebot_error_analyzer.exceptions import AnalyzerError
 
         # データベースの一部メソッドを一時的に破損させる
         original_method = self.analyzer.db.analyze_error

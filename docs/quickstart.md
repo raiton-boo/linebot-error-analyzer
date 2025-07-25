@@ -6,10 +6,10 @@ LINE Bot Error Analyzer の基本的な使い方を説明します。
 
 ```bash
 # PyPI からインストール
-pip install line-bot-error-analyzer
+pip install linebot-error-analyzer
 
 # または GitHub からクローン
-git clone https://github.com/raiton-boo/line-bot-error-analyzer.git
+git clone https://github.com/raiton-boo/linebot-error-analyzer.git
 ```
 
 ## 基本的な使用方法
@@ -17,7 +17,7 @@ git clone https://github.com/raiton-boo/line-bot-error-analyzer.git
 ### 1. 同期処理でのエラー分析
 
 ```python
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 # 分析器を初期化
 analyzer = LineErrorAnalyzer()
@@ -41,7 +41,7 @@ print(f"推奨対処法: {result.recommended_action}")
 
 ```python
 import asyncio
-from line_bot_error_analyzer import AsyncLineErrorAnalyzer
+from linebot_error_analyzer import AsyncLineErrorAnalyzer
 
 async def analyze_error():
     analyzer = AsyncLineErrorAnalyzer()
@@ -64,7 +64,7 @@ asyncio.run(analyze_error())
 
 ```python
 from linebot.v3.messaging.exceptions import ApiException
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 analyzer = LineErrorAnalyzer()
 

@@ -7,7 +7,7 @@ import asyncio
 import time
 import statistics
 from concurrent.futures import ThreadPoolExecutor
-from line_bot_error_analyzer import LineErrorAnalyzer, AsyncLineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer, AsyncLineErrorAnalyzer
 
 
 class TestPerformance(unittest.TestCase):

@@ -7,7 +7,7 @@
 - "rich_menu.rich_menu_image" → リッチメニューカテゴリの画像アップロード
 """
 
-from line_bot_error_analyzer.database.error_database import ErrorDatabase
+from linebot_error_analyzer.database.error_database import ErrorDatabase
 
 
 def demonstrate_hierarchical_structure():

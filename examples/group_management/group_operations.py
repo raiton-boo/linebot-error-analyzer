@@ -19,7 +19,7 @@ import hashlib
 # プロジェクトルートを追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 
 class GroupManager:

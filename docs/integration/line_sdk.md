@@ -16,7 +16,7 @@ LINE Bot Error Analyzer は、LINE Bot SDK の各バージョンとシームレ�
 ```bash
 # 必要なパッケージのインストール
 pip install line-bot-sdk
-pip install line-bot-error-analyzer
+pip install linebot-error-analyzer
 ```
 
 ```python
@@ -24,7 +24,7 @@ from linebot.v3 import LineBotApi
 from linebot.v3.messaging import Configuration, ApiClient, MessagingApi
 from linebot.v3.messaging.exceptions import ApiException
 from linebot.v3.messaging.models import ReplyMessageRequest, TextMessage
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 # 設定
 configuration = Configuration(access_token='YOUR_CHANNEL_ACCESS_TOKEN')

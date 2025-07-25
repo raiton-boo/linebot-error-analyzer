@@ -18,8 +18,8 @@ from datetime import datetime
 # プロジェクトルートを追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from line_bot_error_analyzer import AsyncLineErrorAnalyzer
-from line_bot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
+from linebot_error_analyzer import AsyncLineErrorAnalyzer
+from linebot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
 
 # FastAPIが利用可能かチェック
 try:

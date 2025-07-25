@@ -21,18 +21,18 @@ LINE Bot Error Analyzer の詳細なインストール手順とセットアッ�
 
 ```bash
 # PyPI からインストール
-pip install line-bot-error-analyzer
+pip install linebot-error-analyzer
 
 # インストール確認
-python -c "from line_bot_error_analyzer import LineErrorAnalyzer; print('インストール成功！')"
+python -c "from linebot_error_analyzer import LineErrorAnalyzer; print('インストール成功！')"
 ```
 
 ### 方法 2: GitHub からクローン
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/raiton-boo/line-bot-error-analyzer.git
-cd line-bot-error-analyzer
+git clone https://github.com/raiton-boo/linebot-error-analyzer.git
+cd linebot-error-analyzer
 
 # 開発用インストール
 pip install -e .
@@ -43,13 +43,13 @@ pytest tests/ -v
 
 ### 方法 3: ZIP ダウンロード
 
-1. [GitHub リポジトリ](https://github.com/raiton-boo/line-bot-error-analyzer)から ZIP をダウンロード
+1. [GitHub リポジトリ](https://github.com/raiton-boo/linebot-error-analyzer)から ZIP をダウンロード
 2. 任意のディレクトリに展開
 3. Python パスに追加
 
 ```bash
 # ZIP 展開後
-cd line-bot-error-analyzer-main
+cd linebot-error-analyzer-main
 
 # Python パスに追加
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"

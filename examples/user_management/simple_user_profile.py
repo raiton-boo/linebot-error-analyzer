@@ -11,7 +11,7 @@ import os
 import sys
 from linebot.v3.messaging import AsyncApiClient, AsyncMessagingApi, Configuration
 from linebot.v3.exceptions import InvalidSignatureError
-from line_bot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer import LineErrorAnalyzer
 
 
 # 設定とエラーハンドリング

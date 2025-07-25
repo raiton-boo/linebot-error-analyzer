@@ -3,8 +3,8 @@ include README.md
 include LICENSE
 
 # パッケージファイルを含める
-recursive-include line_bot_error_analyzer *.py
-recursive-include line_bot_error_analyzer py.typed
+recursive-include linebot_error_analyzer *.py
+recursive-include linebot_error_analyzer py.typed
 
 # 不要なファイルを除外
 prune tests

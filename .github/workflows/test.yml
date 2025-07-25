@@ -35,7 +35,7 @@ jobs:
 
       - name: Verify installation
         run: |
-          python -c "from line_bot_error_analyzer import LineErrorAnalyzer; print('Package imported successfully')"
+          python -c "from linebot_error_analyzer import LineErrorAnalyzer; print('Package imported successfully')"
 
       - name: Run tests
         run: |

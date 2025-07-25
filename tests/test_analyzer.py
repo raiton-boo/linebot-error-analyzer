@@ -4,8 +4,8 @@ LINE Bot エラー分析器のテストケース
 
 import unittest
 from unittest.mock import Mock, patch
-from line_bot_error_analyzer import LineErrorAnalyzer, ErrorCategory, ErrorSeverity
-from line_bot_error_analyzer.exceptions import AnalyzerError
+from linebot_error_analyzer import LineErrorAnalyzer, ErrorCategory, ErrorSeverity
+from linebot_error_analyzer.exceptions import AnalyzerError
 
 
 class TestLineErrorAnalyzer(unittest.TestCase):
