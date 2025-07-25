@@ -21,6 +21,8 @@ LINE Bot のエラーを自動分析・診断する Python ライブラリです
 - **同期・非同期対応**: 同期/非同期処理の両方をサポート
 - **SDK 両対応**: LINE Bot SDK v2/v3 系の両方に対応
 - **フレームワーク対応**: Flask、FastAPI 等で使用可能
+- **🆕 ログ解析**: エラーログ文字列の直接解析機能
+- **🆕 パターン解析**: APIパターン指定による文脈解析
 
 ## インストール
 
@@ -71,6 +73,31 @@ result = analyzer.analyze(error_data)
 print(f"カテゴリ: {result.category.value}")  # AUTH_ERROR
 print(f"対処法: {result.recommended_action}")
 print(f"リトライ可能: {result.is_retryable}")  # False
+```
+
+## ✨ ログ文字列解析機能（NEW!）
+
+v2.1.0 で追加された新機能により、エラーログ文字列を直接解析できるようになりました。
+
+```python
+# エラーログ文字列の直接解析
+log_string = """(404)
+Reason: Not Found
+HTTP response headers: HTTPHeaderDict({'x-line-request-id': 'e40f3c8f-ab14-4042-9194-4c26ee828b80'})
+HTTP response body: {"message":"Not found"}"""
+
+# 基本的なログ解析
+result = analyzer.analyze_log(log_string)
+print(f"カテゴリ: {result.category.value}")  # RESOURCE_NOT_FOUND
+
+# APIパターンを指定した文脈解析
+result = analyzer.analyze_log(log_string, api_pattern="user.user_profile")
+print(f"カテゴリ: {result.category.value}")  # USER_BLOCKED（より具体的）
+print(f"リクエストID: {result.request_id}")  # e40f3c8f-ab14-4042-9194-4c26ee828b80
+
+# 文字列をメインanalyze()メソッドでも解析可能
+result = analyzer.analyze("(401) Unauthorized")
+print(f"カテゴリ: {result.category.value}")  # AUTH_ERROR
 ```
 
 ## LINE Bot SDK との統合
@@ -124,6 +151,7 @@ asyncio.run(analyze_errors())
 - **[🎯 使用例集](docs/examples/)** - 実際のプロジェクトでの活用例
 - **[🔧 統合ガイド](docs/integration/)** - FastAPI、Flask との統合
 - **[🐛 エラーリファレンス](docs/errors/)** - 全エラーコード詳細とトラブルシューティング
+- **[🆕 ログ解析ガイド](docs/log_analysis_guide.md)** - エラーログ解析機能の詳細ガイド
 
 ### 実装例
 
