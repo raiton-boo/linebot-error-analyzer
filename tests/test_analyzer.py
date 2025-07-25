@@ -5,7 +5,7 @@ LINE Bot エラー分析器のテストケース
 import unittest
 from unittest.mock import Mock, patch
 from linebot_error_analyzer import LineErrorAnalyzer, ErrorCategory, ErrorSeverity
-from linebot_error_analyzer.exceptions import AnalyzerError
+from linebot_error_analyzer.exceptions import AnalyzerError, UnsupportedErrorTypeError
 
 
 class TestLineErrorAnalyzer(unittest.TestCase):
@@ -156,9 +156,10 @@ class TestLineErrorAnalyzer(unittest.TestCase):
 
     def test_unsupported_error_type(self):
         """サポートされていないエラータイプのテスト"""
-        unsupported_error = "string error"
+        # 数値など、真にサポートされていない型を使用
+        unsupported_error = 12345
 
-        with self.assertRaises(AnalyzerError):
+        with self.assertRaises(UnsupportedErrorTypeError):
             self.analyzer.analyze(unsupported_error)
 
     def test_error_info_to_dict(self):

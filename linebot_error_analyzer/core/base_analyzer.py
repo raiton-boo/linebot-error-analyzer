@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 from .models import LineErrorInfo, ErrorCategory, ErrorSeverity
 from ..database import ErrorDatabase
 from ..exceptions import AnalyzerError, UnsupportedErrorTypeError, InvalidErrorDataError
+from ..utils.log_parser import LogParser
 
 if TYPE_CHECKING:
     from ..utils.types import (
@@ -34,6 +35,7 @@ class BaseLineErrorAnalyzer:
     def __init__(self) -> None:
         """ベース分析器を初期化"""
         self.db: ErrorDatabase = ErrorDatabase()
+        self.log_parser: LogParser = LogParser()
 
     # エラータイプ判定メソッド
 
@@ -309,3 +311,229 @@ class BaseLineErrorAnalyzer:
                 return {}
         except (TypeError, AttributeError, ValueError):
             return {}
+
+    def _analyze_log_string(
+        self, 
+        log_string: str, 
+        api_pattern: Optional[str] = None
+    ) -> LineErrorInfo:
+        """
+        エラーログ文字列を解析してLineErrorInfoを返す
+        
+        Args:
+            log_string: 解析対象のログ文字列
+            api_pattern: APIパターン（例: "user.user_profile", "message.message_push"）
+            
+        Returns:
+            LineErrorInfo: ログ文字列の分析結果
+            
+        Raises:
+            AnalyzerError: ログ解析処理中のエラー
+        """
+        try:
+            # ログ文字列を解析
+            if not self.log_parser.is_parseable(log_string):
+                raise AnalyzerError(f"Log string is not parseable: {log_string[:100]}...")
+            
+            parsed = self.log_parser.parse(log_string)
+            
+            # パースしたデータから辞書形式のエラーデータを構築
+            error_data = {}
+            if parsed.status_code is not None:
+                error_data["status_code"] = parsed.status_code
+            if parsed.message:
+                error_data["message"] = parsed.message
+            if parsed.headers:
+                error_data["headers"] = parsed.headers
+            if parsed.body:
+                error_data.update(parsed.body)
+            if parsed.request_id:
+                error_data["request_id"] = parsed.request_id
+            
+            # メッセージが設定されていない場合はreasonまたはデフォルト値を使用
+            message = parsed.message or parsed.reason or "Unknown error"
+            
+            # APIパターンを考慮した分析
+            category, severity, is_retryable = self._analyze_with_pattern(
+                parsed.status_code or 0,
+                message,
+                api_pattern
+            )
+            
+            return self._create_info(
+                status_code=parsed.status_code or 0,
+                message=message,
+                headers=parsed.headers,
+                error_data=error_data,
+                request_id=parsed.request_id,
+                category=category,
+                severity=severity,
+                is_retryable=is_retryable,
+                raw_error={
+                    "log_string": log_string,
+                    "parsed_data": {
+                        "status_code": parsed.status_code,
+                        "reason": parsed.reason,
+                        "message": parsed.message,
+                        "headers": parsed.headers,
+                        "body": parsed.body,
+                        "request_id": parsed.request_id,
+                    },
+                    "api_pattern": api_pattern,
+                },
+            )
+            
+        except Exception as e:
+            raise AnalyzerError(
+                f"Failed to analyze log string: {str(e)}. "
+                f"Log snippet: {log_string[:100]}...",
+                e,
+            )
+
+    def _analyze_with_pattern(
+        self, 
+        status_code: int, 
+        message: str, 
+        api_pattern: Optional[str]
+    ) -> tuple[ErrorCategory, ErrorSeverity, bool]:
+        """
+        APIパターンを考慮したエラー分析
+        
+        Args:
+            status_code: HTTPステータスコード
+            message: エラーメッセージ
+            api_pattern: APIパターン文字列
+            
+        Returns:
+            tuple: (ErrorCategory, ErrorSeverity, is_retryable)
+        """
+        # 基本的な分析結果を取得
+        base_category, base_severity, base_retryable = self.db.analyze_error(
+            status_code, message
+        )
+        
+        # APIパターンが指定されていない場合は基本分析結果を返す
+        if not api_pattern:
+            return base_category, base_severity, base_retryable
+        
+        # パターン固有の分析を実行
+        return self._analyze_pattern_specific_error(
+            status_code, message, api_pattern, base_category, base_severity, base_retryable
+        )
+
+    def _analyze_pattern_specific_error(
+        self,
+        status_code: int,
+        message: str,
+        api_pattern: str,
+        base_category: ErrorCategory,
+        base_severity: ErrorSeverity,
+        base_retryable: bool,
+    ) -> tuple[ErrorCategory, ErrorSeverity, bool]:
+        """
+        APIパターン固有のエラー分析
+        
+        Args:
+            status_code: HTTPステータスコード
+            message: エラーメッセージ
+            api_pattern: APIパターン
+            base_category: 基本カテゴリ
+            base_severity: 基本重要度
+            base_retryable: 基本リトライ可否
+            
+        Returns:
+            tuple: (ErrorCategory, ErrorSeverity, is_retryable)
+        """
+        message_lower = message.lower()
+        
+        # ユーザー関連APIパターンの特別処理
+        if api_pattern.startswith("user."):
+            return self._analyze_user_pattern_error(
+                status_code, message_lower, base_category, base_severity, base_retryable
+            )
+        
+        # メッセージ関連APIパターンの特別処理
+        elif api_pattern.startswith("message."):
+            return self._analyze_message_pattern_error(
+                status_code, message_lower, base_category, base_severity, base_retryable
+            )
+        
+        # リッチメニュー関連APIパターンの特別処理
+        elif api_pattern.startswith("rich_menu."):
+            return self._analyze_rich_menu_pattern_error(
+                status_code, message_lower, base_category, base_severity, base_retryable
+            )
+        
+        # その他のパターンは基本分析結果を返す
+        return base_category, base_severity, base_retryable
+
+    def _analyze_user_pattern_error(
+        self,
+        status_code: int,
+        message_lower: str,
+        base_category: ErrorCategory,
+        base_severity: ErrorSeverity,
+        base_retryable: bool,
+    ) -> tuple[ErrorCategory, ErrorSeverity, bool]:
+        """ユーザー関連APIパターンのエラー分析"""
+        
+        # 404エラーの詳細分析
+        if status_code == 404:
+            if any(keyword in message_lower for keyword in ["not found", "blocked", "unavailable"]):
+                return ErrorCategory.USER_BLOCKED, ErrorSeverity.MEDIUM, False
+            elif "profile" in message_lower:
+                return ErrorCategory.PROFILE_NOT_ACCESSIBLE, ErrorSeverity.MEDIUM, False
+            else:
+                return ErrorCategory.USER_NOT_FOUND, ErrorSeverity.MEDIUM, False
+        
+        # 403エラーの詳細分析  
+        elif status_code == 403:
+            if "profile" in message_lower:
+                return ErrorCategory.PROFILE_NOT_ACCESSIBLE, ErrorSeverity.HIGH, False
+            else:
+                return ErrorCategory.FORBIDDEN, ErrorSeverity.HIGH, False
+        
+        return base_category, base_severity, base_retryable
+
+    def _analyze_message_pattern_error(
+        self,
+        status_code: int,
+        message_lower: str,
+        base_category: ErrorCategory,
+        base_severity: ErrorSeverity,
+        base_retryable: bool,
+    ) -> tuple[ErrorCategory, ErrorSeverity, bool]:
+        """メッセージ関連APIパターンのエラー分析"""
+        
+        # 400エラーの詳細分析
+        if status_code == 400:
+            if any(keyword in message_lower for keyword in ["reply token", "token"]):
+                if "expired" in message_lower:
+                    return ErrorCategory.REPLY_TOKEN_EXPIRED, ErrorSeverity.HIGH, False
+                elif "used" in message_lower:
+                    return ErrorCategory.REPLY_TOKEN_USED, ErrorSeverity.HIGH, False
+                else:
+                    return ErrorCategory.INVALID_REPLY_TOKEN, ErrorSeverity.HIGH, False
+            elif "payload" in message_lower and "large" in message_lower:
+                return ErrorCategory.PAYLOAD_TOO_LARGE, ErrorSeverity.MEDIUM, False
+        
+        return base_category, base_severity, base_retryable
+
+    def _analyze_rich_menu_pattern_error(
+        self,
+        status_code: int,
+        message_lower: str,
+        base_category: ErrorCategory,
+        base_severity: ErrorSeverity,
+        base_retryable: bool,
+    ) -> tuple[ErrorCategory, ErrorSeverity, bool]:
+        """リッチメニュー関連APIパターンのエラー分析"""
+        
+        # 400エラーの詳細分析
+        if status_code == 400:
+            if any(keyword in message_lower for keyword in ["size", "image", "dimension"]):
+                return ErrorCategory.RICH_MENU_SIZE_ERROR, ErrorSeverity.MEDIUM, False
+            elif "rich" in message_lower and "menu" in message_lower:
+                return ErrorCategory.RICH_MENU_ERROR, ErrorSeverity.MEDIUM, False
+        
+        return base_category, base_severity, base_retryable

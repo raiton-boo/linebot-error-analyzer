@@ -140,6 +140,7 @@ class LineBotV2ApiErrorLike(Protocol):
 
 # Union types for supported error objects
 SupportedErrorType = Union[
+    str,  # Log strings
     ErrorDataDict,
     LineBotV3ApiExceptionLike,
     LineBotV2ApiErrorLike,

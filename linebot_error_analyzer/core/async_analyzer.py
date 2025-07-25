@@ -54,11 +54,15 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
                 return await self._analyze_v2(error)
             elif isinstance(error, dict):
                 return await self._analyze_dict(error)
+            elif isinstance(error, str):
+                # 文字列の場合はログ文字列として解析
+                return await self._analyze_log_string(error)
             elif hasattr(error, "status_code") and hasattr(error, "text"):
                 return await self._analyze_response(error)
             else:
                 raise UnsupportedErrorTypeError(
-                    f"Unsupported error type: {type(error)}"
+                    f"Unsupported error type: {type(error)}. "
+                    f"Supported types: SDK exceptions, dict, HTTP response objects, log strings"
                 )
 
         except UnsupportedErrorTypeError:
@@ -271,3 +275,32 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
         """HTTPレスポンス類似オブジェクトを非同期分析"""
         await asyncio.sleep(0)  # 協調的マルチタスク
         return super()._analyze_response(error)
+
+    async def analyze_log(
+        self, 
+        log_string: str, 
+        api_pattern: Optional[str] = None
+    ) -> LineErrorInfo:
+        """
+        エラーログ文字列を非同期で解析してLineErrorInfoを返す
+
+        Args:
+            log_string: 解析対象のログ文字列
+            api_pattern: APIパターン（例: "user.user_profile", "message.message_push"）
+
+        Returns:
+            LineErrorInfo: ログ文字列の詳細分析結果
+
+        Raises:
+            AnalyzerError: ログ解析処理中のエラー
+        """
+        return await self._analyze_log_string(log_string, api_pattern)
+
+    async def _analyze_log_string(
+        self, 
+        log_string: str, 
+        api_pattern: Optional[str] = None
+    ) -> LineErrorInfo:
+        """エラーログ文字列を非同期分析"""
+        await asyncio.sleep(0)  # 協調的マルチタスク
+        return super()._analyze_log_string(log_string, api_pattern)

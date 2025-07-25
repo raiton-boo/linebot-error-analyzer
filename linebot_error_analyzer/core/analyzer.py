@@ -51,12 +51,15 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
                 return self._analyze_v2(error)
             elif isinstance(error, dict):
                 return self._analyze_dict(error)
+            elif isinstance(error, str):
+                # 文字列の場合はログ文字列として解析
+                return self._analyze_log_string(error)
             elif hasattr(error, "status_code") and hasattr(error, "text"):
                 return self._analyze_response(error)
             else:
                 raise UnsupportedErrorTypeError(
                     f"Unsupported error type: {type(error)}. "
-                    f"Supported types: SDK exceptions, dict, HTTP response objects"
+                    f"Supported types: SDK exceptions, dict, HTTP response objects, log strings"
                 )
 
         except UnsupportedErrorTypeError:
@@ -67,6 +70,26 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
             raise AnalyzerError(
                 f"Failed to analyze error: {str(e)}. Error type: {type(error)}", e
             )
+
+    def analyze_log(
+        self, 
+        log_string: str, 
+        api_pattern: Optional[str] = None
+    ) -> LineErrorInfo:
+        """
+        エラーログ文字列を解析してLineErrorInfoを返す
+
+        Args:
+            log_string: 解析対象のログ文字列
+            api_pattern: APIパターン（例: "user.user_profile", "message.message_push"）
+
+        Returns:
+            LineErrorInfo: ログ文字列の詳細分析結果
+
+        Raises:
+            AnalyzerError: ログ解析処理中のエラー
+        """
+        return self._analyze_log_string(log_string, api_pattern)
 
     def analyze_multiple(
         self, errors: List["SupportedErrorType"]

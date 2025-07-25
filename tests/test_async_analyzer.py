@@ -6,7 +6,7 @@ import asyncio
 import unittest
 from unittest.mock import Mock, patch
 from linebot_error_analyzer import AsyncLineErrorAnalyzer, ErrorCategory, ErrorSeverity
-from linebot_error_analyzer.exceptions import AnalyzerError
+from linebot_error_analyzer.exceptions import AnalyzerError, UnsupportedErrorTypeError
 
 
 class TestAsyncLineErrorAnalyzer(unittest.IsolatedAsyncioTestCase):
@@ -175,9 +175,10 @@ class TestAsyncLineErrorAnalyzer(unittest.IsolatedAsyncioTestCase):
 
     async def test_unsupported_error_type(self):
         """サポートされていないエラータイプの非同期テスト"""
-        unsupported_error = "string error"
+        # 数値など、真にサポートされていない型を使用
+        unsupported_error = 12345
 
-        with self.assertRaises(AnalyzerError):
+        with self.assertRaises(UnsupportedErrorTypeError):
             await self.analyzer.analyze(unsupported_error)
 
     async def test_concurrent_analysis(self):
