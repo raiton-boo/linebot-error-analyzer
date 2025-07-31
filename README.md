@@ -3,10 +3,13 @@
 [![PyPI version](https://badge.fury.io/py/linebot-error-analyzer.svg)](https://badge.fury.io/py/linebot-error-analyzer)
 [![Python](https://img.shields.io/pypi/pyversions/linebot-error-analyzer.svg)](https://pypi.org/project/linebot-error-analyzer/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://static.pepy.tech/badge/linebot-error-analyzer)](https://pepy.tech/project/linebot-error-analyzer)
 
 LINE Bot のエラーを自動分析・診断する Python ライブラリです。
 
 エラーの原因を特定して、具体的な解決策を提案する「エラー分析器」があなたの LINE Bot 開発をサポートします。
+
+**🚀 このライブラリは共同開発者・コントリビューターを募集中です！ご興味のある方は [Discord](https://discord.gg/6qYHH9HY) までご連絡ください。**
 
 ## 📋 要件
 
