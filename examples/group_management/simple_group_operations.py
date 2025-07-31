@@ -128,7 +128,7 @@ async def get_room_members_count(room_id: str):
     """ルームメンバー数の取得"""
 
     try:
-        members_count = await line_bot_api.get_room_members_count(room_id=room_id)
+        members_count = await line_bot_api.get_room_member_count(room_id=room_id)
         print(f"✅ ルームメンバー数取得成功: {members_count.count}人")
         return {"success": True, "count": members_count.count}
 
