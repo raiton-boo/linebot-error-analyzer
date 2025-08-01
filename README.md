@@ -2,6 +2,8 @@
 
 [![PyPI version](https://badge.fury.io/py/linebot-error-analyzer.svg)](https://badge.fury.io/py/linebot-error-analyzer)
 [![Python](https://img.shields.io/pypi/pyversions/linebot-error-analyzer.svg)](https://pypi.org/project/linebot-error-analyzer/)
+![GitHub Repo stars](https://img.shields.io/github/stars/raiton-boo/linebot-error-analyzer?style=social)
+![GitHub issues](https://img.shields.io/github/issues/raiton-boo/linebot-error-analyzer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://static.pepy.tech/badge/linebot-error-analyzer)](https://pepy.tech/project/linebot-error-analyzer)
 
