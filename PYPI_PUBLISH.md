@@ -1,79 +1,50 @@
-# PyPI 公開手順
+# PyPI 公開手順（CI/CD 前提・メモ）
 
-## 事前準備
+目的: GitHub Actions 等の CI/CD で PyPI へのビルドおよび公開を自動化している前提で、
+ローカルで最低限行う作業と確認事項を簡潔に残すためのメモです。
 
-1. PyPI アカウントの作成
+## 前提
 
-   - https://pypi.org/ でアカウント作成
-   - https://test.pypi.org/ でテストアカウント作成
+- リポジトリが GitHub にあること
+- PyPI API トークンを GitHub Secrets（例: `PYPI_API_TOKEN`）に登録済みであること
+- CI ワークフロー（例: `.github/workflows/publish.yml`）がタグプッシュ等で実行されること
 
-2. 必要なツールのインストール
+## ローカルで行う最小手順
 
-```bash
-pip install --upgrade pip
-pip install --upgrade build
-pip install --upgrade twine
-```
+1. バージョン更新
 
-## 公開手順
+   - `linebot_error_analyzer/__init__.py` の `__version__` を更新
 
-### 1. バージョン更新
-
-`linebot_error_analyzer/__init__.py` の `__version__` を更新
-
-### 2. パッケージビルド
+2. 変更をコミットして push
 
 ```bash
-# クリーンビルド
-rm -rf dist/ build/ *.egg-info/
-
-# パッケージビルド
-python -m build
+git add linebot_error_analyzer/__init__.py
+git commit -m "Bump version to x.y.z"
+git push
 ```
 
-### 3. テスト PyPI での動作確認
+3. リリースタグを作成して push（タグ作成が CI トリガー）
 
 ```bash
-# テストPyPIにアップロード
-twine upload --repository testpypi dist/*
-
-# テストインストール
-pip install --index-url https://test.pypi.org/simple/ linebot-error-analyzer
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
-### 4. 本番 PyPI に公開
+※ ローカルでのビルドや `twine upload` は不要です。CI がビルドと公開を行います。
 
-```bash
-# 本番PyPIにアップロード
-twine upload dist/*
-```
+## 推奨ルール（メモ）
 
-## 確認事項
+- バージョンは semver に従う（例: `1.2.3`）
+- タグは `v` プレフィックスを付ける（例: `v1.2.3`）と CI で扱いやすい
+- コミットメッセージは明確に（例: `Bump version to 1.2.3`）
 
-- [ ] バージョン番号の更新
-- [ ] README.md の内容確認
-- [ ] ライセンス情報の確認
-- [ ] テストの実行とパス
-- [ ] 依存関係の確認
-- [ ] パッケージ構造の確認
+## 確認チェックリスト
 
-## リリース後
+- [ ] バージョン番号を更新した
+- [ ] README.md／ドキュメントの要点を確認した
+- [ ] ライセンス情報を確認した
+- [ ] 依存関係（requirements）に不要なものがないか確認した
 
-1. GitHub でリリースタグを作成
-2. Changelog の更新
-3. ドキュメントの更新
+## CI/ワークフロー確認方法
 
-## トラブルシューティング
-
-### ファイルが重複している場合
-
-```bash
-twine upload --skip-existing dist/*
-```
-
-### 認証エラーの場合
-
-```bash
-# API トークンを使用
-twine upload --username __token__ --password [API_TOKEN] dist/*
-```
+- GitHub の Actions タブで該当ワークフロー実行ログを確認する
