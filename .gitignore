@@ -136,3 +136,9 @@ Thumbs.db
 # PyPI公開関連
 *.tar.gz
 twine.log
+
+# Development/test files (exclude from main branch)
+simple_test.py
+test_api_specific.py
+test_comprehensive.py
+test_real_error.py
