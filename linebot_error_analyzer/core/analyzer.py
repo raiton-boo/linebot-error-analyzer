@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 from .base_analyzer import BaseLineErrorAnalyzer
-from .models import LineErrorInfo, ErrorCategory, ErrorSeverity
+from ..models import LineErrorInfo, ErrorCategory
 from ..exceptions import AnalyzerError, UnsupportedErrorTypeError, InvalidErrorDataError
 
 if TYPE_CHECKING:
@@ -67,45 +67,6 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
             raise AnalyzerError(
                 f"Failed to analyze error: {str(e)}. Error type: {type(error)}", e
             )
-
-    def analyze_multiple(
-        self, errors: List["SupportedErrorType"]
-    ) -> List[LineErrorInfo]:
-        """
-        複数エラーの一括分析
-
-        エラーリストを順次分析し、結果をリストで返す。
-        個別エラーの分析失敗時も処理を継続（graceful degradation）。
-
-        Args:
-            errors: 分析対象のエラーリスト
-
-        Returns:
-            List[LineErrorInfo]: 各エラーの分析結果（入力と同サイズ）
-        """
-        results = []
-        for error in errors:
-            try:
-                result = self.analyze(error)
-                results.append(result)
-            except Exception as e:
-                # 個別分析失敗時のフォールバック処理
-                error_info = self._create_info(
-                    status_code=0,
-                    message=f"Analysis failed: {str(e)}",
-                    headers={},
-                    error_data={},
-                    category=ErrorCategory.UNKNOWN,
-                    severity=ErrorSeverity.MEDIUM,
-                    is_retryable=False,
-                    raw_error={
-                        "original_error": str(error),
-                        "analysis_error": str(e),
-                        "error_type": type(error).__name__,
-                    },
-                )
-                results.append(error_info)
-        return results
 
     # SDK バージョン別分析メソッド
 
@@ -172,7 +133,6 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
                 error_data=error_data,
                 request_id=headers.get("x-line-request-id")
                 or headers.get("X-Line-Request-Id"),
-                error_code=error_data.get("error_code"),
                 raw_error=error_data,
             )
 

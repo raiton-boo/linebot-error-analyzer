@@ -10,7 +10,7 @@ import asyncio
 import json
 from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 from .base_analyzer import BaseLineErrorAnalyzer
-from .models import LineErrorInfo, ErrorCategory, ErrorSeverity
+from ..models import LineErrorInfo, ErrorCategory
 from ..exceptions import AnalyzerError, UnsupportedErrorTypeError, InvalidErrorDataError
 
 if TYPE_CHECKING:
@@ -66,88 +66,7 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
         except Exception as e:
             raise AnalyzerError(f"Failed to analyze error: {str(e)}", e)
 
-    async def analyze_multiple(
-        self, errors: List["SupportedErrorType"]
-    ) -> List[LineErrorInfo]:
-        """
-        複数エラーの非同期一括分析
-
-        エラーリストを並行処理で分析し、結果をリストで返す。
-        個別エラーの分析失敗時も処理を継続（graceful degradation）。
-
-        Args:
-            errors: 分析対象のエラーリスト
-
-        Returns:
-            List[LineErrorInfo]: 各エラーの分析結果（入力と同サイズ）
-        """
-        tasks = []
-        for error in errors:
-            task = self._analyze_single_with_fallback(error)
-            tasks.append(task)
-
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        # 例外をキャッチしてUNKNOWNエラーに変換
-        final_results = []
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                error_info = self._create_info(
-                    status_code=0,
-                    message=f"Analysis failed: {str(result)}",
-                    headers={},
-                    error_data={},
-                    category=ErrorCategory.UNKNOWN,
-                    severity=ErrorSeverity.MEDIUM,
-                    is_retryable=False,
-                    raw_error={
-                        "original_error": str(errors[i]),
-                        "analysis_error": str(result),
-                    },
-                )
-                final_results.append(error_info)
-            else:
-                final_results.append(result)
-
-        return final_results
-
-    async def analyze_batch(
-        self,
-        errors: List["SupportedErrorType"],
-        batch_size: int = 10,
-        max_workers: int = None,
-    ) -> List[LineErrorInfo]:
-        """
-        大量エラーのバッチ処理による非同期分析
-
-        メモリ使用量を抑制しつつ大量のエラーを効率的に処理。
-
-        Args:
-            errors: 分析対象のエラーリスト
-            batch_size: バッチサイズ（デフォルト: 10）
-            max_workers: 最大ワーカー数（互換性のため保持、未使用）
-
-        Returns:
-            List[LineErrorInfo]: 全エラーの分析結果
-        """
-        results: List[LineErrorInfo] = []
-
-        # バッチごとに処理
-        for i in range(0, len(errors), batch_size):
-            batch = errors[i : i + batch_size]
-            batch_results = await self.analyze_multiple(batch)
-            results.extend(batch_results)
-            await asyncio.sleep(0.001)  # バッチ間の協調的制御権移譲
-
-        return results
-
-    # 非同期版分析メソッド
-
-    async def _analyze_single_with_fallback(
-        self, error: "SupportedErrorType"
-    ) -> LineErrorInfo:
-        """エラー分析のフォールバック付きラッパー"""
-        try:
+            # 非同期版分析メソッド
             return await self.analyze(error)
         except Exception as e:
             return self._create_info(
@@ -156,7 +75,6 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
                 headers={},
                 error_data={},
                 category=ErrorCategory.UNKNOWN,
-                severity=ErrorSeverity.MEDIUM,
                 is_retryable=False,
                 raw_error={"original_error": str(error), "analysis_error": str(e)},
             )
@@ -221,7 +139,6 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
                 error_data=error_data,
                 request_id=headers.get("x-line-request-id")
                 or headers.get("X-Line-Request-Id"),
-                error_code=error_data.get("error_code"),
                 raw_error=error_data,
             )
 

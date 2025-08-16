@@ -8,7 +8,7 @@ LINE Bot エラー分析器 - ベースクラス
 from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
-from .models import LineErrorInfo, ErrorCategory, ErrorSeverity
+from ..models import LineErrorInfo, ErrorCategory
 from ..database import ErrorDatabase
 from ..exceptions import AnalyzerError, UnsupportedErrorTypeError, InvalidErrorDataError
 
@@ -91,7 +91,6 @@ class BaseLineErrorAnalyzer:
             error_data={},
             request_id=None,
             category=ErrorCategory.INVALID_SIGNATURE,
-            severity=ErrorSeverity.CRITICAL,
             is_retryable=False,
             description=self.db.get_error_details(ErrorCategory.INVALID_SIGNATURE)[
                 "description"
@@ -114,7 +113,6 @@ class BaseLineErrorAnalyzer:
             error_data={},
             request_id=None,
             category=ErrorCategory.INVALID_SIGNATURE,
-            severity=ErrorSeverity.CRITICAL,
             is_retryable=False,
             description=self.db.get_error_details(ErrorCategory.INVALID_SIGNATURE)[
                 "description"
@@ -143,7 +141,6 @@ class BaseLineErrorAnalyzer:
             status_code = 0
 
         message = error.get("message", "Unknown error")
-        error_code = error.get("error_code")
         headers = error.get("headers", {})
         details = error.get("details", [])
         request_id = error.get("request_id")
@@ -154,7 +151,6 @@ class BaseLineErrorAnalyzer:
             headers=headers,
             error_data=error,
             request_id=request_id,
-            error_code=error_code,
             raw_error=error,
         )
 
@@ -216,9 +212,7 @@ class BaseLineErrorAnalyzer:
         headers: Dict[str, str],
         error_data: Dict[str, Any],
         request_id: Optional[str] = None,
-        error_code: Optional[str] = None,
         category: Optional[ErrorCategory] = None,
-        severity: Optional[ErrorSeverity] = None,
         is_retryable: Optional[bool] = None,
         description: Optional[str] = None,
         recommended_action: Optional[str] = None,
@@ -228,12 +222,11 @@ class BaseLineErrorAnalyzer:
         """LineErrorInfoオブジェクトを作成する共通メソッド"""
 
         # 自動分析（引数で指定されていない場合）
-        if category is None or severity is None or is_retryable is None:
-            auto_category, auto_severity, auto_retryable = self.db.analyze_error(
+        if category is None or is_retryable is None:
+            auto_category, _, auto_retryable = self.db.analyze_error(
                 status_code, message
             )
             category = category or auto_category
-            severity = severity or auto_severity
             is_retryable = is_retryable if is_retryable is not None else auto_retryable
 
         # 詳細情報の取得
@@ -266,10 +259,8 @@ class BaseLineErrorAnalyzer:
 
         return LineErrorInfo(
             status_code=status_code,
-            error_code=error_code,
             message=message,
             category=category,
-            severity=severity,
             is_retryable=is_retryable,
             description=description,
             recommended_action=recommended_action,

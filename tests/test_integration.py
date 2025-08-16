@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import Mock, patch
 import json
 from linebot_error_analyzer import LineErrorAnalyzer, AsyncLineErrorAnalyzer
-from linebot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
+from linebot_error_analyzer.models import ErrorCategory
 
 
 class TestLineSDKIntegration(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestLineSDKIntegration(unittest.TestCase):
         self.assertEqual(result.status_code, 400)
         self.assertEqual(result.message, "Invalid request body")
         self.assertEqual(result.category, ErrorCategory.INVALID_PARAM)
-        self.assertEqual(result.severity, ErrorSeverity.HIGH)
+        # ErrorSeverity関連のアサーションは削除済み
         self.assertFalse(result.is_retryable)
         self.assertEqual(result.request_id, "test-request-123")
         self.assertEqual(len(result.details), 1)
@@ -61,7 +61,7 @@ class TestLineSDKIntegration(unittest.TestCase):
 
         self.assertEqual(result.status_code, 400)
         self.assertEqual(result.category, ErrorCategory.INVALID_SIGNATURE)
-        self.assertEqual(result.severity, ErrorSeverity.CRITICAL)
+        # ErrorSeverity関連のアサーションは削除済み
         self.assertFalse(result.is_retryable)
 
     def test_v2_linebot_api_error_integration(self):
@@ -107,7 +107,7 @@ class TestLineSDKIntegration(unittest.TestCase):
 
         self.assertEqual(result.status_code, 400)
         self.assertEqual(result.category, ErrorCategory.INVALID_SIGNATURE)
-        self.assertEqual(result.severity, ErrorSeverity.CRITICAL)
+        # ErrorSeverity関連のアサーションは削除済み
 
     def test_http_response_integration(self):
         """HTTPレスポンスとの統合テスト"""
@@ -126,7 +126,7 @@ class TestLineSDKIntegration(unittest.TestCase):
 
         self.assertEqual(result.status_code, 429)
         self.assertEqual(result.category, ErrorCategory.RATE_LIMIT)
-        self.assertEqual(result.severity, ErrorSeverity.MEDIUM)
+        # ErrorSeverity関連のアサーションは削除済み
         self.assertTrue(result.is_retryable)
         # retry_afterは3600秒（Retry-Afterヘッダーから取得）
         self.assertEqual(result.retry_after, 3600)
@@ -386,8 +386,8 @@ class TestRealWorldScenarios(unittest.TestCase):
         self.assertEqual(total_errors, 9)
 
         # 重要度の確認
-        critical_errors = [r for r in results if r.severity == ErrorSeverity.CRITICAL]
-        high_errors = [r for r in results if r.severity == ErrorSeverity.HIGH]
+        # ErrorSeverity関連のアサーションは削除済み
+        # ErrorSeverity関連のアサーションは削除済み
 
         self.assertGreater(len(critical_errors), 0)  # 致命的エラーが存在
         self.assertGreater(len(high_errors), 0)  # 高重要度エラーが存在
@@ -442,7 +442,7 @@ class TestRealWorldScenarios(unittest.TestCase):
         immediate_alerts = [
             r
             for r in results
-            if r.severity in [ErrorSeverity.CRITICAL, ErrorSeverity.HIGH]
+            # ErrorSeverity関連のアサーションは削除済み
             and r.category in [ErrorCategory.SERVER_ERROR, ErrorCategory.RATE_LIMIT]
         ]
 

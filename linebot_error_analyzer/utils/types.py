@@ -64,8 +64,6 @@ ErrorCategoryLiteral = Literal[
     "UNKNOWN",
 ]
 
-ErrorSeverityLiteral = Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]
-
 
 # TypedDict for structured error data
 class ErrorDataDict(TypedDict, total=False):

@@ -15,7 +15,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from linebot_error_analyzer import LineErrorAnalyzer
-from linebot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
+from linebot_error_analyzer.models import ErrorCategory
 
 
 def demo_dict_analysis():

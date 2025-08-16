@@ -13,9 +13,13 @@ __license__ = "MIT"
 from .core import (
     LineErrorAnalyzer,
     AsyncLineErrorAnalyzer,
+)
+from .models import (
     LineErrorInfo,
     ErrorCategory,
-    ErrorSeverity,
+    ApiPattern,
+    LogParseResult,
+    LogParser,
 )
 from .exceptions import AnalyzerError
 
@@ -24,6 +28,8 @@ __all__ = [
     "AsyncLineErrorAnalyzer",
     "LineErrorInfo",
     "ErrorCategory",
-    "ErrorSeverity",
+    "ApiPattern",
+    "LogParseResult",
+    "LogParser",
     "AnalyzerError",
 ]

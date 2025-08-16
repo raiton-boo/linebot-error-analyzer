@@ -19,7 +19,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from linebot_error_analyzer.database.error_database import ErrorDatabase
-from linebot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
+from linebot_error_analyzer.models import ErrorCategory
 
 
 def demonstrate_hierarchical_structure():
@@ -60,18 +60,10 @@ def demonstrate_hierarchical_structure():
                 status_code=status_code, message="", endpoint=endpoint
             )
 
-            # 結果表示（絵文字でわかりやすく）
-            severity_emoji = {
-                ErrorSeverity.LOW: "🟢",
-                ErrorSeverity.MEDIUM: "🟡",
-                ErrorSeverity.HIGH: "🟠",
-                ErrorSeverity.CRITICAL: "🔴",
-            }
-
             retry_emoji = "🔄" if retryable else "❌"
 
             print(f"   ✅ エラーカテゴリ: {category.value}")
-            print(f"   {severity_emoji.get(severity, '⚪')} 重要度: {severity.value}")
+            print(f"   重要度: {severity.value}")
             print(f"   {retry_emoji} リトライ可能: {'はい' if retryable else 'いいえ'}")
 
             # 詳細情報取得

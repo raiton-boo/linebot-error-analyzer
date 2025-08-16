@@ -18,7 +18,7 @@ from typing import List, Dict, Any
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from linebot_error_analyzer import AsyncLineErrorAnalyzer
-from linebot_error_analyzer.core.models import ErrorCategory, ErrorSeverity
+from linebot_error_analyzer.models import ErrorCategory
 
 
 async def demo_async_basic():

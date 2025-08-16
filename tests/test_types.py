@@ -10,7 +10,7 @@ from linebot_error_analyzer import (
     ErrorCategory,
     ErrorSeverity,
 )
-from linebot_error_analyzer.core.models import LineErrorInfo
+from linebot_error_analyzer.models import LineErrorInfo
 from linebot_error_analyzer.utils.types import (
     StatusCode,
     ErrorMessage,
