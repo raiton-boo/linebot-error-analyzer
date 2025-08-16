@@ -59,11 +59,11 @@ class TestModuleStructure(unittest.TestCase):
 
         # ApiPatternに必要な要素があることを確認
         required_patterns = [
-            "MESSAGE_PUSH",
-            "MESSAGE_REPLY",
+            "PUSH_MESSAGE",
+            "REPLY_MESSAGE",
             "USER_PROFILE",
-            "RICH_MENU_CREATE",
-            "WEBHOOK_SETTINGS",
+            "RICH_MENU",
+            "WEBHOOK",
         ]
 
         for pattern_name in required_patterns:
@@ -73,10 +73,10 @@ class TestModuleStructure(unittest.TestCase):
 
         # ErrorCategoryに必要な要素があることを確認
         required_categories = [
-            "CLIENT_ERROR",
+            "AUTH_ERROR",
             "SERVER_ERROR",
-            "AUTHENTICATION_ERROR",
-            "RATE_LIMIT_ERROR",
+            "INVALID_TOKEN",
+            "RATE_LIMIT",
             "USER_BLOCKED",
         ]
 

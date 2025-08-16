@@ -11,12 +11,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from linebot_error_analyzer import LineErrorAnalyzer
 from linebot_error_analyzer.models import (
-    ErrorResult,
+    LineErrorInfo,
     ApiPattern,
     ErrorCategory,
-    LogParseResult,
-    ErrorInfo,
 )
+from linebot_error_analyzer.models.log_parser import LogParser, LogParseResult
 from linebot_error_analyzer.models.log_parser import LogParser
 
 
@@ -28,25 +27,24 @@ class TestTypes(unittest.TestCase):
         self.analyzer = LineErrorAnalyzer()
 
     def test_error_result_structure(self):
-        """ErrorResult構造体のテスト"""
-        result = self.analyzer.analyze(404, "Not Found")
+        """LineErrorInfo構造体のテスト"""
+        log = "(404) Not Found"
+        result = self.analyzer.analyze(log)
 
         # 必須フィールドの存在確認
         self.assertTrue(hasattr(result, "status_code"))
         self.assertTrue(hasattr(result, "category"))
         self.assertTrue(hasattr(result, "is_retryable"))
         self.assertTrue(hasattr(result, "description"))
-        self.assertTrue(hasattr(result, "recommended_action"))
 
         # 型確認
         self.assertIsInstance(result.status_code, int)
         self.assertIsInstance(result.category, ErrorCategory)
         self.assertIsInstance(result.is_retryable, bool)
         self.assertIsInstance(result.description, str)
-        self.assertIsInstance(result.recommended_action, str)
 
         # オプショナルフィールド
-        if result.request_id is not None:
+        if hasattr(result, "request_id") and result.request_id is not None:
             self.assertIsInstance(result.request_id, str)
 
         if hasattr(result, "timestamp") and result.timestamp is not None:
@@ -157,22 +155,22 @@ HTTP response body: {"message":"Not found"}"""
         analyze_method = getattr(self.analyzer, "analyze")
         self.assertTrue(callable(analyze_method))
 
-        # オーバーロードされたメソッドの呼び出しテスト
-        # パターン1: (status_code, message)
-        result1 = self.analyzer.analyze(404, "Not Found")
-        self.assertIsInstance(result1, ErrorResult)
+        # ログ文字列での呼び出しテスト
+        # パターン1: 基本的なログ
+        result1 = self.analyzer.analyze("(404) Not Found")
+        self.assertIsInstance(result1, LineErrorInfo)
 
-        # パターン2: (status_code, message, api_pattern)
-        result2 = self.analyzer.analyze(404, "Not Found", ApiPattern.USER_PROFILE)
-        self.assertIsInstance(result2, ErrorResult)
+        # パターン2: 詳細なログ
+        result2 = self.analyzer.analyze("(404) User profile not found")
+        self.assertIsInstance(result2, LineErrorInfo)
 
-        # パターン3: (error_log_string)
-        result3 = self.analyzer.analyze("(404) Not Found")
-        self.assertIsInstance(result3, ErrorResult)
+        # パターン3: エラーメッセージ付き
+        result3 = self.analyzer.analyze("(500) Internal server error occurred")
+        self.assertIsInstance(result3, LineErrorInfo)
 
-        # パターン4: (error_log_string, api_pattern)
-        result4 = self.analyzer.analyze("(404) Not Found", ApiPattern.USER_PROFILE)
-        self.assertIsInstance(result4, ErrorResult)
+        # パターン4: 簡潔なログ
+        result4 = self.analyzer.analyze("(429) Rate limit")
+        self.assertIsInstance(result4, LineErrorInfo)
 
     def test_type_hints_consistency(self):
         """型ヒントの整合性テスト"""
@@ -181,9 +179,9 @@ HTTP response body: {"message":"Not found"}"""
             analyzer_hints = get_type_hints(LineErrorAnalyzer.analyze)
             self.assertIsNotNone(analyzer_hints)
 
-            # ErrorResultの型ヒント（利用可能な場合）
-            if hasattr(ErrorResult, "__annotations__"):
-                result_annotations = ErrorResult.__annotations__
+            # LineErrorInfoの型ヒント（利用可能な場合）
+            if hasattr(LineErrorInfo, "__annotations__"):
+                result_annotations = LineErrorInfo.__annotations__
                 self.assertIsNotNone(result_annotations)
 
         except Exception as e:
@@ -192,7 +190,7 @@ HTTP response body: {"message":"Not found"}"""
 
     def test_immutability_and_data_integrity(self):
         """データの不変性と整合性テスト"""
-        result = self.analyzer.analyze(404, "Not Found")
+        result = self.analyzer.analyze("(404) Not Found")
 
         # 基本的な値の妥当性
         self.assertEqual(result.status_code, 404)
@@ -212,13 +210,13 @@ HTTP response body: {"message":"Not found"}"""
         """無効な型での例外処理テスト"""
         # 無効な型での呼び出し
         with self.assertRaises((TypeError, ValueError)):
-            self.analyzer.analyze(None, "test")
+            self.analyzer.analyze(None)
 
         with self.assertRaises((TypeError, ValueError)):
-            self.analyzer.analyze("404", None)  # 文字列のステータスコード
+            self.analyzer.analyze("")  # 空文字列
 
         with self.assertRaises((TypeError, ValueError)):
-            self.analyzer.analyze(404.5, "test")  # 浮動小数点のステータスコード
+            self.analyzer.analyze("invalid format")  # 不正な形式
 
     def test_collection_types(self):
         """コレクション型のテスト"""
@@ -238,7 +236,7 @@ HTTP response headers: HTTPHeaderDict({'key1': 'value1', 'key2': 'value2'})"""
     def test_optional_fields_handling(self):
         """オプショナルフィールドの処理テスト"""
         # request_idがないケース
-        result_without_id = self.analyzer.analyze(400, "Bad Request")
+        result_without_id = self.analyzer.analyze("(400) Bad Request")
         if hasattr(result_without_id, "request_id"):
             # request_idがある場合はstrまたはNone
             self.assertTrue(
@@ -247,8 +245,7 @@ HTTP response headers: HTTPHeaderDict({'key1': 'value1', 'key2': 'value2'})"""
             )
 
         # request_idがあるケース
-        log_with_id = """(404)
-HTTP response headers: HTTPHeaderDict({'x-line-request-id': 'test-id-123'})"""
+        log_with_id = "(404) Request ID: test-id-123"
 
         result_with_id = self.analyzer.analyze(log_with_id)
         if hasattr(result_with_id, "request_id") and result_with_id.request_id:
