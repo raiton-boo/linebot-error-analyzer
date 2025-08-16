@@ -6,7 +6,8 @@ import os
 import asyncio
 
 # プロジェクトのルートをPATHに追加
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
 
 
 def test_imports():

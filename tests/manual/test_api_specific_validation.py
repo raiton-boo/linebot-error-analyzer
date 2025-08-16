@@ -4,7 +4,8 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
 
 from linebot_error_analyzer import LineErrorAnalyzer
 from linebot_error_analyzer.models import ApiPattern
