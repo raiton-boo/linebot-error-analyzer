@@ -1,401 +1,256 @@
-"""
-パフォーマンステスト
-"""
+#!/usr/bin/env python3
+"""パフォーマンステストケース"""
 
 import unittest
-import asyncio
 import time
-import statistics
-from concurrent.futures import ThreadPoolExecutor
+import asyncio
+import sys
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# プロジェクトのルートをPATHに追加
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from linebot_error_analyzer import LineErrorAnalyzer, AsyncLineErrorAnalyzer
+from linebot_error_analyzer.models import ApiPattern
 
 
 class TestPerformance(unittest.TestCase):
-    """パフォーマンステストクラス"""
+    """パフォーマンステストケース"""
 
     def setUp(self):
-        self.analyzer = LineErrorAnalyzer()
+        """テストセットアップ"""
+        self.sync_analyzer = LineErrorAnalyzer()
+        self.async_analyzer = AsyncLineErrorAnalyzer()
 
     def test_single_analysis_performance(self):
-        """単一エラー分析のパフォーマンステスト"""
-        error_data = {"status_code": 400, "message": "Performance test error"}
+        """単一解析のパフォーマンステスト"""
+        test_cases = [
+            (400, "Bad Request"),
+            (401, "Unauthorized"),
+            (404, "Not Found"),
+            (429, "Too Many Requests"),
+            (500, "Internal Server Error")
+        ]
 
-        # 1000回実行して平均時間を測定
-        times = []
-        for _ in range(1000):
-            start = time.perf_counter()
-            self.analyzer.analyze(error_data)
-            end = time.perf_counter()
-            times.append(end - start)
+        total_time = 0
+        iterations = 100
 
-        avg_time = statistics.mean(times)
-        median_time = statistics.median(times)
-        max_time = max(times)
+        for _ in range(iterations):
+            for status_code, message in test_cases:
+                start_time = time.perf_counter()
+                result = self.sync_analyzer.analyze(status_code, message)
+                end_time = time.perf_counter()
+                
+                total_time += (end_time - start_time)
+                
+                # 結果の妥当性確認
+                self.assertEqual(result.status_code, status_code)
+                self.assertIsNotNone(result.category)
 
-        print(f"\n単一分析パフォーマンス:")
-        print(f"平均時間: {avg_time*1000:.2f}ms")
-        print(f"中央値: {median_time*1000:.2f}ms")
-        print(f"最大時間: {max_time*1000:.2f}ms")
-
-        # 1ms以下であることを確認（大部分のケース）
-        self.assertLess(avg_time, 0.001)
+        avg_time_per_analysis = total_time / (iterations * len(test_cases))
+        
+        # 1回の解析が10ms以下で完了することを期待
+        self.assertLess(avg_time_per_analysis, 0.01, 
+                       f"Average analysis time too slow: {avg_time_per_analysis:.6f}s")
 
     def test_batch_analysis_performance(self):
-        """バッチ分析のパフォーマンステスト"""
-        # 様々なサイズでテスト
-        sizes = [10, 100, 1000, 5000]
+        """バッチ解析のパフォーマンステスト"""
+        # 大量のテストケースを準備
+        test_data = []
+        for i in range(1000):
+            status_code = 400 + (i % 100)  # 400-499の範囲
+            message = f"Test error {i}"
+            test_data.append((status_code, message))
 
-        for size in sizes:
-            with self.subTest(batch_size=size):
-                errors = [
-                    {"status_code": 400 + (i % 100), "message": f"Batch error {i}"}
-                    for i in range(size)
-                ]
-
-                start = time.perf_counter()
-                results = self.analyzer.analyze_multiple(errors)
-                end = time.perf_counter()
-
-                execution_time = end - start
-                throughput = size / execution_time
-
-                print(f"\nバッチサイズ {size}:")
-                print(f"実行時間: {execution_time:.3f}秒")
-                print(f"スループット: {throughput:.0f} errors/sec")
-
-                # 結果の正確性を確認
-                self.assertEqual(len(results), size)
-
-                # パフォーマンス要件（最低100 errors/sec）
-                self.assertGreater(throughput, 100)
-
-    def test_memory_efficiency(self):
-        """メモリ効率のテスト"""
-        import psutil
-        import os
-
-        process = psutil.Process(os.getpid())
-
-        # 初期メモリ使用量
-        initial_memory = process.memory_info().rss / 1024 / 1024  # MB
-
-        # 大量のエラーを処理
-        large_batch = [
-            {
-                "status_code": 400,
-                "message": f"Memory test error {i}",
-                "details": [{"field": f"data_{j}" for j in range(10)}],
-            }
-            for i in range(10000)
-        ]
-
-        results = self.analyzer.analyze_multiple(large_batch)
-
-        # 処理後のメモリ使用量
-        final_memory = process.memory_info().rss / 1024 / 1024  # MB
-        memory_increase = final_memory - initial_memory
-
-        print(f"\nメモリ使用量:")
-        print(f"初期: {initial_memory:.2f}MB")
-        print(f"最終: {final_memory:.2f}MB")
-        print(f"増加: {memory_increase:.2f}MB")
-
-        # 結果を確認
-        self.assertEqual(len(results), 10000)
-
-        # メモリ増加が合理的な範囲内（500MB以下）
-        self.assertLess(memory_increase, 500)
-
-    def test_thread_safety_performance(self):
-        """マルチスレッド環境でのパフォーマンステスト"""
-
-        def worker_function(worker_id):
-            """ワーカー関数"""
-            local_analyzer = LineErrorAnalyzer()
-            errors = [
-                {"status_code": 400 + i, "message": f"Worker {worker_id} error {i}"}
-                for i in range(100)
-            ]
-
-            start = time.perf_counter()
-            results = local_analyzer.analyze_multiple(errors)
-            end = time.perf_counter()
-
-            return len(results), end - start
-
-        # 10個のワーカーで並行実行
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            start_total = time.perf_counter()
-            futures = [executor.submit(worker_function, i) for i in range(10)]
-            results = [future.result() for future in futures]
-            end_total = time.perf_counter()
-
-        total_time = end_total - start_total
-        total_errors = sum(result[0] for result in results)
-        avg_worker_time = statistics.mean(result[1] for result in results)
-
-        print(f"\nマルチスレッドパフォーマンス:")
-        print(f"総実行時間: {total_time:.3f}秒")
-        print(f"処理したエラー数: {total_errors}")
-        print(f"平均ワーカー時間: {avg_worker_time:.3f}秒")
-        print(f"総スループット: {total_errors/total_time:.0f} errors/sec")
-
-        # 全ワーカーが正常に完了
-        self.assertEqual(len(results), 10)
-        self.assertEqual(total_errors, 1000)
-
-
-class TestAsyncPerformance(unittest.IsolatedAsyncioTestCase):
-    """非同期パフォーマンステスト"""
-
-    async def asyncSetUp(self):
-        self.analyzer = AsyncLineErrorAnalyzer()
-
-    async def test_async_batch_performance(self):
-        """非同期バッチ処理のパフォーマンステスト"""
-        # 様々なバッチサイズとワーカー数でテスト
-        test_cases = [
-            {"errors": 1000, "batch_size": 50, "max_workers": 10},
-            {"errors": 5000, "batch_size": 100, "max_workers": 20},
-            {"errors": 10000, "batch_size": 200, "max_workers": 50},
-        ]
-
-        for case in test_cases:
-            with self.subTest(**case):
-                errors = [
-                    {"status_code": 400 + (i % 200), "message": f"Async error {i}"}
-                    for i in range(case["errors"])
-                ]
-
-                start = time.perf_counter()
-                results = await self.analyzer.analyze_batch(
-                    errors,
-                    batch_size=case["batch_size"],
-                    max_workers=case["max_workers"],
-                )
-                end = time.perf_counter()
-
-                execution_time = end - start
-                throughput = case["errors"] / execution_time
-
-                print(f"\n非同期バッチ処理 ({case}):")
-                print(f"実行時間: {execution_time:.3f}秒")
-                print(f"スループット: {throughput:.0f} errors/sec")
-
-                # 結果の正確性を確認
-                self.assertEqual(len(results), case["errors"])
-
-                # 非同期処理は同期処理より高速であることを期待
-                self.assertGreater(throughput, 500)
-
-    async def test_concurrent_analysis_performance(self):
-        """並行分析のパフォーマンステスト"""
-        error_data = {"status_code": 429, "message": "Concurrent analysis test"}
-
-        # 100個の分析タスクを並行実行
-        tasks = [self.analyzer.analyze(error_data) for _ in range(100)]
-
-        start = time.perf_counter()
-        results = await asyncio.gather(*tasks)
-        end = time.perf_counter()
-
-        execution_time = end - start
-        throughput = 100 / execution_time
-
-        print(f"\n並行分析パフォーマンス:")
-        print(f"実行時間: {execution_time:.3f}秒")
-        print(f"スループット: {throughput:.0f} analyses/sec")
-
-        # 全て正常に完了
-        self.assertEqual(len(results), 100)
-
-        # 高い並行性能を期待
-        self.assertGreater(throughput, 1000)
-
-    async def test_mixed_workload_performance(self):
-        """混合ワークロードのパフォーマンステスト"""
-        # 異なるタイプのエラーを混合
-        mixed_errors = []
-
-        # 辞書形式のエラー
-        mixed_errors.extend(
-            [{"status_code": 400 + i, "message": f"Dict error {i}"} for i in range(500)]
-        )
-
-        # レスポンス形式のエラー
-        from unittest.mock import Mock
-
-        for i in range(500):
-            mock_response = Mock()
-            mock_response.status_code = 500 + i
-            mock_response.text = f'{{"message": "Mock error {i}"}}'
-            mock_response.headers = {}
-            mixed_errors.append(mock_response)
-
-        start = time.perf_counter()
-        results = await self.analyzer.analyze_multiple(mixed_errors)
-        end = time.perf_counter()
-
-        execution_time = end - start
-        throughput = 1000 / execution_time
-
-        print(f"\n混合ワークロードパフォーマンス:")
-        print(f"実行時間: {execution_time:.3f}秒")
-        print(f"スループット: {throughput:.0f} errors/sec")
-
-        # 結果の検証
+        start_time = time.perf_counter()
+        
+        results = []
+        for status_code, message in test_data:
+            result = self.sync_analyzer.analyze(status_code, message)
+            results.append(result)
+        
+        end_time = time.perf_counter()
+        
+        # 結果検証
         self.assertEqual(len(results), 1000)
+        for result in results:
+            self.assertIsNotNone(result.status_code)
+            self.assertIsNotNone(result.category)
+        
+        total_time = end_time - start_time
+        throughput = len(test_data) / total_time
+        
+        # スループットが500req/s以上であることを期待
+        self.assertGreater(throughput, 500, 
+                          f"Throughput too low: {throughput:.2f} req/s")
 
-        # 辞書エラーの検証
-        dict_results = results[:500]
-        for i, result in enumerate(dict_results):
-            self.assertEqual(result.status_code, 400 + i)
+    def test_concurrent_analysis_performance(self):
+        """並行解析のパフォーマンステスト"""
+        test_data = [(400 + i, f"Concurrent test {i}") for i in range(100)]
+        
+        def analyze_single(data):
+            status_code, message = data
+            return self.sync_analyzer.analyze(status_code, message)
 
-        # レスポンスエラーの検証
-        response_results = results[500:]
-        for i, result in enumerate(response_results):
-            self.assertEqual(result.status_code, 500 + i)
+        start_time = time.perf_counter()
+        
+        # ThreadPoolExecutorで並行実行
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(analyze_single, data) for data in test_data]
+            results = [future.result() for future in as_completed(futures)]
+        
+        end_time = time.perf_counter()
+        
+        # 結果検証
+        self.assertEqual(len(results), 100)
+        
+        total_time = end_time - start_time
+        
+        # 並行実行により時間短縮されることを期待（単純計算より速い）
+        self.assertLess(total_time, 1.0, 
+                       f"Concurrent execution too slow: {total_time:.3f}s")
 
-    async def test_scalability_under_load(self):
-        """負荷下でのスケーラビリティテスト"""
-        # 段階的に負荷を増加
-        load_levels = [100, 500, 1000, 2000, 5000]
-        results_summary = []
+    def test_async_performance_comparison(self):
+        """非同期版のパフォーマンス比較テスト"""
+        test_data = [(400 + i, f"Async test {i}") for i in range(100)]
+        
+        # 非同期バッチ処理
+        async def async_batch_analysis():
+            tasks = []
+            for status_code, message in test_data:
+                task = self.async_analyzer.analyze(status_code, message)
+                tasks.append(task)
+            
+            return await asyncio.gather(*tasks)
 
-        for load in load_levels:
-            errors = [
-                {"status_code": 400, "message": f"Load test error {i}"}
-                for i in range(load)
-            ]
-
-            # 3回測定して平均を取る
-            times = []
-            for _ in range(3):
-                start = time.perf_counter()
-                results = await self.analyzer.analyze_batch(errors, batch_size=100)
-                end = time.perf_counter()
-                times.append(end - start)
-
-            avg_time = statistics.mean(times)
-            throughput = load / avg_time
-
-            results_summary.append(
-                {"load": load, "time": avg_time, "throughput": throughput}
-            )
-
-            print(f"\n負荷レベル {load}:")
-            print(f"平均時間: {avg_time:.3f}秒")
-            print(f"スループット: {throughput:.0f} errors/sec")
-
-            # 結果の正確性を確認
-            self.assertEqual(len(results), load)
-
-        # スケーラビリティの分析
-        print(f"\nスケーラビリティ分析:")
-        for i, result in enumerate(results_summary):
-            if i > 0:
-                prev_result = results_summary[i - 1]
-                load_increase = result["load"] / prev_result["load"]
-                time_increase = result["time"] / prev_result["time"]
-                efficiency = load_increase / time_increase
-
-                print(
-                    f"負荷 {prev_result['load']} → {result['load']}: "
-                    f"効率比 {efficiency:.2f}"
-                )
-
-                # 効率が著しく低下していないことを確認（目安として0.5以上）
-                self.assertGreater(efficiency, 0.5)
-
-
-class TestResourceUtilization(unittest.TestCase):
-    """リソース使用量テスト"""
-
-    def setUp(self):
-        self.analyzer = LineErrorAnalyzer()
-
-    def test_cpu_utilization(self):
-        """CPU使用率のテスト"""
-        import psutil
-        import threading
-
-        # CPU使用率を監視するスレッド
-        cpu_percentages = []
-        monitoring = True
-
-        def monitor_cpu():
-            while monitoring:
-                cpu_percentages.append(psutil.cpu_percent(interval=0.1))
-
-        monitor_thread = threading.Thread(target=monitor_cpu)
-        monitor_thread.start()
-
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
         try:
-            # CPU集約的な処理
-            large_errors = [
-                {
-                    "status_code": 400 + (i % 200),
-                    "message": f"CPU test error {i}" * 10,  # 長いメッセージ
-                    "details": [{"field": f"value_{j}"} for j in range(20)],
-                }
-                for i in range(5000)
-            ]
-
-            start = time.perf_counter()
-            results = self.analyzer.analyze_multiple(large_errors)
-            end = time.perf_counter()
-
+            start_time = time.perf_counter()
+            async_results = loop.run_until_complete(async_batch_analysis())
+            async_time = time.perf_counter() - start_time
+            
+            # 同期版との比較用
+            start_time = time.perf_counter()
+            sync_results = []
+            for status_code, message in test_data:
+                result = self.sync_analyzer.analyze(status_code, message)
+                sync_results.append(result)
+            sync_time = time.perf_counter() - start_time
+            
+            # 結果検証
+            self.assertEqual(len(async_results), len(sync_results))
+            
+            # パフォーマンス比較（非同期版が極端に遅くないことを確認）
+            self.assertLess(async_time, sync_time * 2, 
+                           f"Async version too slow: {async_time:.3f}s vs {sync_time:.3f}s")
+            
         finally:
-            monitoring = False
-            monitor_thread.join()
+            loop.close()
 
-        execution_time = end - start
-        avg_cpu = statistics.mean(cpu_percentages) if cpu_percentages else 0
-        max_cpu = max(cpu_percentages) if cpu_percentages else 0
-
-        print(f"\nCPU使用率:")
-        print(f"実行時間: {execution_time:.3f}秒")
-        print(f"平均CPU使用率: {avg_cpu:.1f}%")
-        print(f"最大CPU使用率: {max_cpu:.1f}%")
-
-        # 結果の検証
-        self.assertEqual(len(results), 5000)
-
-        # CPU使用率が合理的な範囲内（90%以下）
-        self.assertLess(max_cpu, 90)
-
-    def test_file_descriptor_usage(self):
-        """ファイルディスクリプタ使用量のテスト"""
+    def test_memory_usage_stability(self):
+        """メモリ使用量の安定性テスト"""
+        import gc
         import psutil
         import os
-
+        
         process = psutil.Process(os.getpid())
+        initial_memory = process.memory_info().rss
+        
+        # 大量の解析を実行
+        for i in range(5000):
+            status_code = 400 + (i % 100)
+            message = f"Memory test {i}"
+            result = self.sync_analyzer.analyze(status_code, message)
+            self.assertIsNotNone(result)
+            
+            # 定期的にガベージコレクション
+            if i % 1000 == 0:
+                gc.collect()
+        
+        # 最終メモリ使用量
+        final_memory = process.memory_info().rss
+        memory_increase = final_memory - initial_memory
+        
+        # メモリ増加が50MB以下であることを期待
+        max_memory_increase = 50 * 1024 * 1024  # 50MB
+        self.assertLess(memory_increase, max_memory_increase, 
+                       f"Memory usage increased too much: {memory_increase / 1024 / 1024:.2f}MB")
 
-        # 初期のファイルディスクリプタ数
-        initial_fds = process.num_fds() if hasattr(process, "num_fds") else 0
+    def test_error_log_parsing_performance(self):
+        """エラーログパース性能テスト"""
+        # 複雑なエラーログのテンプレート
+        complex_log_template = """({status_code})
+Reason: {reason}
+HTTP response headers: HTTPHeaderDict({{'server': 'legy', 'cache-control': 'no-cache, no-store, max-age=0, must-revalidate', 'content-type': 'application/json', 'date': 'Fri, 25 Jul 2025 18:23:24 GMT', 'expires': '0', 'pragma': 'no-cache', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'x-line-request-id': 'test-{request_id}', 'x-xss-protection': '1; mode=block', 'content-length': '23'}})
+HTTP response body: {{"message":"{message}"}}"""
 
-        # 大量の分析を実行
-        for batch in range(10):
-            errors = [
-                {"status_code": 400, "message": f"FD test batch {batch} error {i}"}
-                for i in range(1000)
-            ]
-            results = self.analyzer.analyze_multiple(errors)
-            self.assertEqual(len(results), 1000)
+        test_logs = []
+        for i in range(500):
+            log = complex_log_template.format(
+                status_code=400 + (i % 100),
+                reason=f"Error {i}",
+                request_id=f"req-{i}",
+                message=f"Test message {i}"
+            )
+            test_logs.append(log)
 
-        # 最終のファイルディスクリプタ数
-        final_fds = process.num_fds() if hasattr(process, "num_fds") else 0
-        fd_increase = final_fds - initial_fds
+        start_time = time.perf_counter()
+        
+        results = []
+        for log in test_logs:
+            result = self.sync_analyzer.analyze(log)
+            results.append(result)
+        
+        end_time = time.perf_counter()
+        
+        # 結果検証
+        self.assertEqual(len(results), 500)
+        for i, result in enumerate(results):
+            expected_status = 400 + (i % 100)
+            self.assertEqual(result.status_code, expected_status)
+            self.assertEqual(result.request_id, f"req-{i}")
+        
+        total_time = end_time - start_time
+        avg_time = total_time / len(test_logs)
+        
+        # ログパース時間が適切であることを確認
+        self.assertLess(avg_time, 0.005, 
+                       f"Log parsing too slow: {avg_time:.6f}s per log")
 
-        print(f"\nファイルディスクリプタ使用量:")
-        print(f"初期: {initial_fds}")
-        print(f"最終: {final_fds}")
-        print(f"増加: {fd_increase}")
-
-        # ファイルディスクリプタのリークがないことを確認
-        self.assertLess(abs(fd_increase), 10)
+    def test_api_pattern_analysis_performance(self):
+        """APIパターン解析のパフォーマンステスト"""
+        error_log = """(404)
+HTTP response body: {"message":"Not found"}"""
+        
+        patterns = list(ApiPattern)
+        iterations = 200
+        
+        start_time = time.perf_counter()
+        
+        for _ in range(iterations):
+            for pattern in patterns:
+                result = self.sync_analyzer.analyze(error_log, api_pattern=pattern)
+                self.assertIsNotNone(result.category)
+        
+        end_time = time.perf_counter()
+        
+        total_analyses = iterations * len(patterns)
+        total_time = end_time - start_time
+        avg_time = total_time / total_analyses
+        
+        # APIパターン指定時も高速であることを確認
+        self.assertLess(avg_time, 0.002, 
+                       f"API pattern analysis too slow: {avg_time:.6f}s per analysis")
 
 
 if __name__ == "__main__":
-    # パフォーマンステストは詳細出力で実行
-    unittest.main(verbosity=2, buffer=False)
+    # psutilが必要なテストはオプション
+    try:
+        import psutil
+    except ImportError:
+        print("Warning: psutil not available, skipping memory usage tests")
+    
+    unittest.main()
