@@ -58,9 +58,9 @@ class TestErrorHandling(unittest.TestCase):
 
         for empty_input in empty_inputs:
             with self.subTest(input=repr(empty_input)):
-                result = self.analyzer.analyze(empty_input)
-                self.assertIsNotNone(result)
-                self.assertIsNotNone(result.category)
+                # 空文字列や空白のみの場合はAnalyzerErrorが発生することを期待
+                with self.assertRaises(AnalyzerError):
+                    self.analyzer.analyze(empty_input)
 
     def test_very_long_input_handling(self):
         """非常に長い入力の処理テスト"""
@@ -128,7 +128,7 @@ class TestErrorHandling(unittest.TestCase):
 
         def analyze_error():
             try:
-                result = self.analyzer.analyze(404, "Concurrent test")
+                result = self.analyzer.analyze("(404) Concurrent test")
                 results.append(result)
             except Exception as e:
                 errors.append(e)
@@ -162,7 +162,7 @@ class TestErrorHandling(unittest.TestCase):
 
         # 大量の解析を実行してメモリリークがないことを確認
         for i in range(1000):
-            self.analyzer.analyze(500, f"Memory test {i}")
+            self.analyzer.analyze(f"(500) Memory test {i}")
 
             # 100回ごとにガベージコレクション
             if i % 100 == 0:

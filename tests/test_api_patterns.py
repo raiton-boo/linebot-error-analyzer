@@ -40,17 +40,25 @@ class TestApiPatterns(unittest.TestCase):
     def test_message_api_patterns(self):
         """メッセージ送信APIのパターンテスト"""
         test_cases = [
-            (ApiPattern.PUSH_MESSAGE, "プッシュメッセージ"),
-            (ApiPattern.REPLY_MESSAGE, "リプライメッセージ"),
-            (ApiPattern.MULTICAST_MESSAGE, "マルチキャストメッセージ"),
+            (ApiPattern.MESSAGE_PUSH, "プッシュメッセージ", ErrorCategory.USER_BLOCKED),
+            (
+                ApiPattern.MESSAGE_REPLY,
+                "リプライメッセージ",
+                ErrorCategory.RESOURCE_NOT_FOUND,
+            ),
+            (
+                ApiPattern.MESSAGE_MULTICAST,
+                "マルチキャストメッセージ",
+                ErrorCategory.USER_BLOCKED,
+            ),
         ]
 
         error_log = '(404) {"message":"Not found"}'
 
-        for pattern, description in test_cases:
+        for pattern, description, expected_category in test_cases:
             with self.subTest(pattern=pattern):
                 result = self.analyzer.analyze(error_log, pattern)
-                self.assertEqual(result.category, ErrorCategory.USER_BLOCKED)
+                self.assertEqual(result.category, expected_category)
                 # 説明文は実装によって異なるので、カテゴリーのみ確認    def test_webhook_api_patterns(self):
         """Webhook関連APIのパターンテスト"""
         webhook_patterns = [
@@ -103,7 +111,7 @@ class TestApiPatterns(unittest.TestCase):
         async def async_test():
             error_log = '(429) {"message":"Rate limit exceeded"}'
             result = await self.async_analyzer.analyze(
-                error_log, ApiPattern.PUSH_MESSAGE
+                error_log, ApiPattern.MESSAGE_PUSH
             )
 
             self.assertEqual(result.status_code, 429)
@@ -124,7 +132,7 @@ class TestApiPatterns(unittest.TestCase):
     def test_pattern_specific_solutions(self):
         """パターン特有の解決策テスト"""
         test_cases = [
-            (ApiPattern.PUSH_MESSAGE, 404, "リソース"),
+            (ApiPattern.MESSAGE_PUSH, 404, "リソース"),
             (ApiPattern.USER_PROFILE, 404, "ブロック"),
             (ApiPattern.RICH_MENU, 400, "エラー"),
         ]

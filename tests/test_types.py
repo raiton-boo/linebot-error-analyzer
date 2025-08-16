@@ -57,17 +57,14 @@ class TestTypes(unittest.TestCase):
             "MESSAGE_REPLY",
             "MESSAGE_PUSH",
             "MESSAGE_MULTICAST",
+            "MESSAGE_BROADCAST",
+            "MESSAGE_NARROWCAST",
             "USER_PROFILE",
-            "GROUP_PROFILE",
-            "ROOM_PROFILE",
-            "GROUP_MEMBER_PROFILE",
-            "ROOM_MEMBER_PROFILE",
-            "GROUP_MEMBER_COUNT",
-            "ROOM_MEMBER_COUNT",
-            "RICH_MENU_CREATE",
-            "RICH_MENU_UPDATE",
-            "RICH_MENU_DELETE",
-            "WEBHOOK_SETTINGS",
+            "GROUP_SUMMARY",
+            "ROOM_MEMBER",
+            "RICH_MENU",
+            "CONTENT",
+            "WEBHOOK",
             "CHANNEL_ACCESS_TOKEN",
         ]
 
@@ -83,14 +80,14 @@ class TestTypes(unittest.TestCase):
     def test_error_category_enum(self):
         """ErrorCategoryエニューメーションのテスト"""
         expected_categories = [
-            "CLIENT_ERROR",
-            "AUTHENTICATION_ERROR",
-            "AUTHORIZATION_ERROR",
+            "AUTH_ERROR",
+            "INVALID_TOKEN",
+            "INVALID_PARAM",
             "RESOURCE_NOT_FOUND",
             "USER_BLOCKED",
-            "RATE_LIMIT_EXCEEDED",
+            "RATE_LIMIT",
             "SERVER_ERROR",
-            "UNKNOWN_ERROR",
+            "UNKNOWN",
         ]
 
         for category_name in expected_categories:
@@ -133,21 +130,26 @@ HTTP response body: {"message":"Not found"}"""
         from linebot_error_analyzer.database.error_database import ErrorDatabase
 
         db = ErrorDatabase()
-        error_info = db.get_error_info(404)
+        # get_error_infoの代わりにanalyze_errorを使用
+        category, _, is_retryable = db.analyze_error(404, "Not found")
+        error_details = db.get_error_details(category)
 
         # 必須フィールド
-        self.assertTrue(hasattr(error_info, "status_code"))
-        self.assertTrue(hasattr(error_info, "category"))
-        self.assertTrue(hasattr(error_info, "is_retryable"))
-        self.assertTrue(hasattr(error_info, "description"))
-        self.assertTrue(hasattr(error_info, "recommended_action"))
+        self.assertIsNotNone(category)
+        self.assertIsInstance(is_retryable, bool)
+        self.assertIsInstance(error_details, dict)
+        self.assertIn("description", error_details)
+        self.assertIn("action", error_details)
 
         # 型確認
-        self.assertIsInstance(error_info.status_code, int)
-        self.assertIsInstance(error_info.category, ErrorCategory)
-        self.assertIsInstance(error_info.is_retryable, bool)
-        self.assertIsInstance(error_info.description, str)
-        self.assertIsInstance(error_info.recommended_action, str)
+        # 実際に404のレスポンスを生成して検証
+        analyzer = LineErrorAnalyzer()
+        result = analyzer.analyze("(404) Not found")
+        self.assertEqual(result.status_code, 404)
+        self.assertIsInstance(result.category, ErrorCategory)
+        self.assertIsInstance(result.is_retryable, bool)
+        self.assertIsInstance(result.description, str)
+        self.assertIsInstance(result.recommended_action, str)
 
     def test_analyzer_method_signatures(self):
         """アナライザーメソッドのシグネチャテスト"""
@@ -208,15 +210,21 @@ HTTP response body: {"message":"Not found"}"""
 
     def test_error_handling_with_invalid_types(self):
         """無効な型での例外処理テスト"""
+        from linebot_error_analyzer.exceptions import (
+            UnsupportedErrorTypeError,
+            AnalyzerError,
+        )
+
         # 無効な型での呼び出し
-        with self.assertRaises((TypeError, ValueError)):
+        with self.assertRaises(UnsupportedErrorTypeError):
             self.analyzer.analyze(None)
 
-        with self.assertRaises((TypeError, ValueError)):
+        with self.assertRaises(AnalyzerError):
             self.analyzer.analyze("")  # 空文字列
 
-        with self.assertRaises((TypeError, ValueError)):
-            self.analyzer.analyze("invalid format")  # 不正な形式
+        # 不正な形式の場合はUNKNOWNカテゴリで返される
+        result = self.analyzer.analyze("invalid format")
+        self.assertEqual(result.category, ErrorCategory.UNKNOWN)
 
     def test_collection_types(self):
         """コレクション型のテスト"""

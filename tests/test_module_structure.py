@@ -26,7 +26,7 @@ class TestModuleStructure(unittest.TestCase):
         """モデルクラスのインポートテスト"""
         try:
             from linebot_error_analyzer.models import (
-                ErrorResult,
+                LineErrorInfo,
                 ApiPattern,
                 ErrorCategory,
             )
@@ -59,8 +59,8 @@ class TestModuleStructure(unittest.TestCase):
 
         # ApiPatternに必要な要素があることを確認
         required_patterns = [
-            "PUSH_MESSAGE",
-            "REPLY_MESSAGE",
+            "MESSAGE_PUSH",
+            "MESSAGE_REPLY",
             "USER_PROFILE",
             "RICH_MENU",
             "WEBHOOK",
@@ -167,7 +167,7 @@ class TestConfiguration(unittest.TestCase):
         analyzer = LineErrorAnalyzer()
 
         # 基本的なエラー解析
-        result = analyzer.analyze(404, "Not Found")
+        result = analyzer.analyze("(404) Not Found")
 
         # 必須フィールドの存在確認
         self.assertTrue(hasattr(result, "status_code"))

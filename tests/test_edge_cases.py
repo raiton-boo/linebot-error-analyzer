@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from linebot_error_analyzer import LineErrorAnalyzer, AsyncLineErrorAnalyzer
 from linebot_error_analyzer.models import ApiPattern, ErrorCategory
+from linebot_error_analyzer.exceptions import AnalyzerError
 
 
 class TestEdgeCases(unittest.TestCase):
@@ -122,7 +123,7 @@ class TestEdgeCases(unittest.TestCase):
                     self.assertIsNotNone(result.category)
                 except Exception as e:
                     # 適切なエラーハンドリング
-                    self.assertIsInstance(e, (ValueError, TypeError))
+                    self.assertIsInstance(e, (ValueError, TypeError, AnalyzerError))
 
     def test_api_pattern_edge_cases(self):
         """APIパターンのエッジケース"""

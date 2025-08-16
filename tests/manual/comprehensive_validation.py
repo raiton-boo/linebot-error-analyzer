@@ -33,7 +33,7 @@ HTTP response body: {"message":"Not found"}"""
             ApiPattern.MESSAGE_REPLY,
             ApiPattern.MESSAGE_PUSH,
             ApiPattern.USER_PROFILE,
-            ApiPattern.RICH_MENU_CREATE,
+            ApiPattern.RICH_MENU_CREATE_CREATE,
             ApiPattern.WEBHOOK_SETTINGS,
         ]
 
