@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """ログ文字列解        self.assertEqual(result.status_code, 404)
-        self.assertEqual(result.category, ErrorCategory.RESOURCE_NOT_FOUND)
-        self.assertEqual(result.request_id, 'abc123')
-        self.assertIn("リソース", result.description)トケース"""
+self.assertEqual(result.category, ErrorCategory.RESOURCE_NOT_FOUND)
+self.assertEqual(result.request_id, 'abc123')
+self.assertIn("リソース", result.description)トケース"""
 
 import unittest
 import sys
@@ -35,7 +35,7 @@ HTTP response body: {"message":"Not found"}"""
 
         self.assertEqual(result.status_code, 404)
         self.assertEqual(result.category, ErrorCategory.RESOURCE_NOT_FOUND)
-        self.assertEqual(result.request_id, 'abc123')
+        self.assertEqual(result.request_id, "abc123")
         self.assertIn("リソース", result.description)
 
     def test_parse_with_api_pattern_user_profile(self):
