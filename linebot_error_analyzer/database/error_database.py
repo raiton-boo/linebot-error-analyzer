@@ -418,6 +418,11 @@ class ErrorDatabase:
                 "action": "適切な権限を取得してから再試行してください。",
                 "doc_url": "https://developers.line.biz/ja/docs/line-developers-console/",
             },
+            ErrorCategory.USER_BLOCKED: {
+                "description": "ユーザーにブロックされているため、プロフィール情報にアクセスできません。",
+                "action": "ブロックされたユーザーの情報は取得できません。他のユーザーで再試行してください。",
+                "doc_url": "https://developers.line.biz/ja/reference/messaging-api/#get-profile",
+            },
             ErrorCategory.PLAN_LIMITATION: {
                 "description": "現在のプランでは利用できない機能です。",
                 "action": "プランのアップグレードまたは代替手段を検討してください。",
@@ -545,6 +550,14 @@ class ErrorDatabase:
             if endpoint_result:
                 return endpoint_result
 
+        # 1.5. APIパターン特有のエラー判定
+        if endpoint and status_code and message:
+            api_specific_result = self._analyze_api_specific_error(
+                endpoint, status_code, message
+            )
+            if api_specific_result:
+                return api_specific_result
+
         # 2. 基本HTTPステータスコード
         status_result = self.status_code_mappings.get(
             status_code, (ErrorCategory.UNKNOWN, False)
@@ -552,13 +565,46 @@ class ErrorDatabase:
 
         # 4. エラーメッセージパターンマッチング
         if message:
-            for pattern, category, _, retryable in self.message_patterns:
+            for pattern, category, retryable in self.message_patterns:
                 if re.search(pattern, message.lower()):
                     # ステータスコードでリトライ可能性を上書き
                     final_retryable = retryable or status_result[1]
                     return (category, None, final_retryable)
 
         return (status_result[0], None, status_result[1])
+
+    def _analyze_api_specific_error(
+        self, endpoint: str, status_code: int, message: str
+    ) -> Optional[Tuple[ErrorCategory, None, bool]]:
+        """APIパターン特有のエラー分析"""
+
+        # ユーザープロフィール取得の場合
+        if "user" in endpoint and "profile" in endpoint:
+            if status_code == 404:
+                # より具体的なエラーメッセージがある場合
+                if "user not found" in message.lower():
+                    return (ErrorCategory.USER_NOT_FOUND, None, False)
+                # "Not found"メッセージの場合、ブロックされている可能性が高い
+                elif "not found" in message.lower():
+                    return (ErrorCategory.USER_BLOCKED, None, False)
+
+        # メッセージ送信の場合
+        elif "message" in endpoint:
+            if status_code == 404:
+                # より具体的なメッセージを優先
+                if "user not found" in message.lower():
+                    return (ErrorCategory.USER_NOT_FOUND, None, False)
+                # メッセージ送信での404は通常ユーザーブロックの可能性
+                elif "not found" in message.lower():
+                    return (ErrorCategory.USER_BLOCKED, None, False)
+
+        # Webhook設定の場合
+        elif "webhook" in endpoint:
+            if status_code == 404:
+                if "not found" in message.lower():
+                    return (ErrorCategory.WEBHOOK_ERROR, None, False)
+
+        return None
 
     def get_error_details(self, category: ErrorCategory) -> Dict[str, str]:
         """エラーカテゴリの詳細情報を取得"""

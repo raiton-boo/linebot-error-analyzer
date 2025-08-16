@@ -10,10 +10,8 @@ __author__ = "らいとん"
 __email__ = "raitosongwe@gmail.com"
 __license__ = "MIT"
 
-from .core import (
-    LineErrorAnalyzer,
-    AsyncLineErrorAnalyzer,
-)
+from .analyzer import LineErrorAnalyzer
+from .async_analyzer import AsyncLineErrorAnalyzer
 from .models import (
     LineErrorInfo,
     ErrorCategory,
