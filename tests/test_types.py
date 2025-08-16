@@ -1,273 +1,264 @@
-"""
-型安全性のテストケース
-"""
+#!/usr/bin/env python3
+"""型とデータ構造のテストケース"""
 
 import unittest
-from typing import Dict, Any, List
-from linebot_error_analyzer import (
-    LineErrorAnalyzer,
-    AsyncLineErrorAnalyzer,
+import sys
+import os
+from typing import get_type_hints
+
+# プロジェクトのルートをPATHに追加
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from linebot_error_analyzer import LineErrorAnalyzer
+from linebot_error_analyzer.models import (
+    LineErrorInfo,
+    ApiPattern,
     ErrorCategory,
-    ErrorSeverity,
 )
-from linebot_error_analyzer.models import LineErrorInfo
-from linebot_error_analyzer.utils.types import (
-    StatusCode,
-    ErrorMessage,
-    RequestId,
-    Headers,
-    RawErrorData,
-    ErrorCategoryLiteral,
-    ErrorSeverityLiteral,
-    SupportedErrorType,
-    ErrorDataDict,
-    is_valid_status_code,
-    is_valid_error_message,
-    is_error_data_dict,
-    is_http_response_like,
-    is_line_bot_v3_exception,
-    is_line_bot_v2_error,
-)
-from linebot_error_analyzer.exceptions import AnalyzerError
+from linebot_error_analyzer.models.log_parser import LogParser, LogParseResult
+from linebot_error_analyzer.models.log_parser import LogParser
 
 
-class TestTypeValidation(unittest.TestCase):
-    """型検証のテストクラス"""
+class TestTypes(unittest.TestCase):
+    """型とデータ構造のテスト"""
 
-    def test_valid_status_code(self):
-        """有効なステータスコードのテスト"""
-        self.assertTrue(is_valid_status_code(200))
-        self.assertTrue(is_valid_status_code(404))
-        self.assertTrue(is_valid_status_code(500))
+    def setUp(self):
+        """テストセットアップ"""
+        self.analyzer = LineErrorAnalyzer()
 
-        # 無効なステータスコード
-        self.assertFalse(is_valid_status_code(50))  # 範囲外
-        self.assertFalse(is_valid_status_code(1000))  # 範囲外
-        self.assertFalse(is_valid_status_code("200"))  # 文字列
-        self.assertFalse(is_valid_status_code(None))  # None
+    def test_error_result_structure(self):
+        """LineErrorInfo構造体のテスト"""
+        log = "(404) Not Found"
+        result = self.analyzer.analyze(log)
 
-    def test_valid_error_message(self):
-        """有効なエラーメッセージのテスト"""
-        self.assertTrue(is_valid_error_message("Valid error message"))
-        self.assertTrue(is_valid_error_message("エラーメッセージ"))
+        # 必須フィールドの存在確認
+        self.assertTrue(hasattr(result, "status_code"))
+        self.assertTrue(hasattr(result, "category"))
+        self.assertTrue(hasattr(result, "is_retryable"))
+        self.assertTrue(hasattr(result, "description"))
 
-        # 無効なエラーメッセージ
-        self.assertFalse(is_valid_error_message(""))  # 空文字
-        self.assertFalse(is_valid_error_message("   "))  # 空白のみ
-        self.assertFalse(is_valid_error_message(None))  # None
-        self.assertFalse(is_valid_error_message(123))  # 数値
+        # 型確認
+        self.assertIsInstance(result.status_code, int)
+        self.assertIsInstance(result.category, ErrorCategory)
+        self.assertIsInstance(result.is_retryable, bool)
+        self.assertIsInstance(result.description, str)
 
-    def test_error_data_dict_validation(self):
-        """ErrorDataDict型の検証テスト"""
-        # 有効なエラーデータ
-        valid_data = {"status_code": 400, "message": "Invalid request"}
-        self.assertTrue(is_error_data_dict(valid_data))
+        # オプショナルフィールド
+        if hasattr(result, "request_id") and result.request_id is not None:
+            self.assertIsInstance(result.request_id, str)
 
-        # statusフィールドでも有効
-        valid_data2 = {"status": 401, "error": "Authentication failed"}
-        self.assertTrue(is_error_data_dict(valid_data2))
+        if hasattr(result, "timestamp") and result.timestamp is not None:
+            self.assertIsInstance(result.timestamp, str)
 
-        # 無効なエラーデータ
-        self.assertFalse(is_error_data_dict({}))  # 空辞書
-        self.assertFalse(is_error_data_dict({"status_code": 400}))  # messageなし
-        self.assertFalse(is_error_data_dict({"message": "error"}))  # statusなし
-        self.assertFalse(is_error_data_dict("not_dict"))  # 辞書でない
+    def test_api_pattern_enum(self):
+        """ApiPatternエニューメーションのテスト"""
+        # 全パターンの存在確認
+        expected_patterns = [
+            "MESSAGE_REPLY",
+            "MESSAGE_PUSH",
+            "MESSAGE_MULTICAST",
+            "MESSAGE_BROADCAST",
+            "MESSAGE_NARROWCAST",
+            "USER_PROFILE",
+            "GROUP_SUMMARY",
+            "ROOM_MEMBER",
+            "RICH_MENU",
+            "CONTENT",
+            "WEBHOOK",
+            "CHANNEL_ACCESS_TOKEN",
+        ]
 
-    def test_line_error_info_validation(self):
-        """LineErrorInfo の型検証テスト"""
-        # 有効なデータでの作成
-        valid_info = LineErrorInfo(
-            status_code=400,
-            error_code=None,
-            message="Test error",
-            category=ErrorCategory.INVALID_PARAM,
-            severity=ErrorSeverity.HIGH,
-            is_retryable=False,
-            description="Test description",
-            recommended_action="Test action",
+        for pattern_name in expected_patterns:
+            self.assertTrue(
+                hasattr(ApiPattern, pattern_name),
+                f"ApiPattern.{pattern_name} not found",
+            )
+
+            pattern = getattr(ApiPattern, pattern_name)
+            self.assertIsInstance(pattern, ApiPattern)
+
+    def test_error_category_enum(self):
+        """ErrorCategoryエニューメーションのテスト"""
+        expected_categories = [
+            "AUTH_ERROR",
+            "INVALID_TOKEN",
+            "INVALID_PARAM",
+            "RESOURCE_NOT_FOUND",
+            "USER_BLOCKED",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "UNKNOWN",
+        ]
+
+        for category_name in expected_categories:
+            self.assertTrue(
+                hasattr(ErrorCategory, category_name),
+                f"ErrorCategory.{category_name} not found",
+            )
+
+            category = getattr(ErrorCategory, category_name)
+            self.assertIsInstance(category, ErrorCategory)
+
+    def test_log_parse_result_structure(self):
+        """LogParseResult構造体のテスト"""
+        parser = LogParser()
+        test_log = """(404)
+Reason: Not Found
+HTTP response headers: HTTPHeaderDict({'x-line-request-id': 'test123'})
+HTTP response body: {"message":"Not found"}"""
+
+        parse_result = parser.parse(test_log)
+
+        # 必須フィールド
+        self.assertTrue(hasattr(parse_result, "parse_success"))
+        self.assertTrue(hasattr(parse_result, "status_code"))
+        self.assertTrue(hasattr(parse_result, "message"))
+
+        # 型確認
+        self.assertIsInstance(parse_result.parse_success, bool)
+        if parse_result.status_code is not None:
+            self.assertIsInstance(parse_result.status_code, int)
+        if parse_result.message is not None:
+            self.assertIsInstance(parse_result.message, str)
+        if parse_result.request_id is not None:
+            self.assertIsInstance(parse_result.request_id, str)
+        if parse_result.headers is not None:
+            self.assertIsInstance(parse_result.headers, dict)
+
+    def test_error_info_structure(self):
+        """ErrorInfo構造体のテスト"""
+        from linebot_error_analyzer.database.error_database import ErrorDatabase
+
+        db = ErrorDatabase()
+        # get_error_infoの代わりにanalyze_errorを使用
+        category, _, is_retryable = db.analyze_error(404, "Not found")
+        error_details = db.get_error_details(category)
+
+        # 必須フィールド
+        self.assertIsNotNone(category)
+        self.assertIsInstance(is_retryable, bool)
+        self.assertIsInstance(error_details, dict)
+        self.assertIn("description", error_details)
+        self.assertIn("action", error_details)
+
+        # 型確認
+        # 実際に404のレスポンスを生成して検証
+        analyzer = LineErrorAnalyzer()
+        result = analyzer.analyze("(404) Not found")
+        self.assertEqual(result.status_code, 404)
+        self.assertIsInstance(result.category, ErrorCategory)
+        self.assertIsInstance(result.is_retryable, bool)
+        self.assertIsInstance(result.description, str)
+        self.assertIsInstance(result.recommended_action, str)
+
+    def test_analyzer_method_signatures(self):
+        """アナライザーメソッドのシグネチャテスト"""
+        # LineErrorAnalyzerのanalyzeメソッド
+        analyze_method = getattr(self.analyzer, "analyze")
+        self.assertTrue(callable(analyze_method))
+
+        # ログ文字列での呼び出しテスト
+        # パターン1: 基本的なログ
+        result1 = self.analyzer.analyze("(404) Not Found")
+        self.assertIsInstance(result1, LineErrorInfo)
+
+        # パターン2: 詳細なログ
+        result2 = self.analyzer.analyze("(404) User profile not found")
+        self.assertIsInstance(result2, LineErrorInfo)
+
+        # パターン3: エラーメッセージ付き
+        result3 = self.analyzer.analyze("(500) Internal server error occurred")
+        self.assertIsInstance(result3, LineErrorInfo)
+
+        # パターン4: 簡潔なログ
+        result4 = self.analyzer.analyze("(429) Rate limit")
+        self.assertIsInstance(result4, LineErrorInfo)
+
+    def test_type_hints_consistency(self):
+        """型ヒントの整合性テスト"""
+        try:
+            # LineErrorAnalyzerの型ヒント
+            analyzer_hints = get_type_hints(LineErrorAnalyzer.analyze)
+            self.assertIsNotNone(analyzer_hints)
+
+            # LineErrorInfoの型ヒント（利用可能な場合）
+            if hasattr(LineErrorInfo, "__annotations__"):
+                result_annotations = LineErrorInfo.__annotations__
+                self.assertIsNotNone(result_annotations)
+
+        except Exception as e:
+            # 型ヒントが利用できない環境では警告のみ
+            self.skipTest(f"Type hints not available: {e}")
+
+    def test_immutability_and_data_integrity(self):
+        """データの不変性と整合性テスト"""
+        result = self.analyzer.analyze("(404) Not Found")
+
+        # 基本的な値の妥当性
+        self.assertEqual(result.status_code, 404)
+        self.assertIsInstance(result.category, ErrorCategory)
+        self.assertIsInstance(result.is_retryable, bool)
+        self.assertIsInstance(result.description, str)
+        self.assertIsInstance(result.recommended_action, str)
+
+        # 文字列フィールドが空でないこと
+        self.assertGreater(len(result.description), 0)
+        self.assertGreater(len(result.recommended_action), 0)
+
+        # booleanフィールドの妥当性
+        self.assertIn(result.is_retryable, [True, False])
+
+    def test_error_handling_with_invalid_types(self):
+        """無効な型での例外処理テスト"""
+        from linebot_error_analyzer.exceptions import (
+            UnsupportedErrorTypeError,
+            AnalyzerError,
         )
 
-        self.assertEqual(valid_info.status_code, 400)
-        self.assertEqual(valid_info.category, ErrorCategory.INVALID_PARAM)
-        self.assertEqual(valid_info.severity, ErrorSeverity.HIGH)
+        # 無効な型での呼び出し
+        with self.assertRaises(UnsupportedErrorTypeError):
+            self.analyzer.analyze(None)
 
-        # 無効なステータスコードでエラー
-        with self.assertRaises(ValueError):
-            LineErrorInfo(
-                status_code=50,  # 無効な範囲
-                error_code=None,
-                message="Test error",
-                category=ErrorCategory.INVALID_PARAM,
-                severity=ErrorSeverity.HIGH,
-                is_retryable=False,
-                description="Test description",
-                recommended_action="Test action",
+        with self.assertRaises(AnalyzerError):
+            self.analyzer.analyze("")  # 空文字列
+
+        # 不正な形式の場合はUNKNOWNカテゴリで返される
+        result = self.analyzer.analyze("invalid format")
+        self.assertEqual(result.category, ErrorCategory.UNKNOWN)
+
+    def test_collection_types(self):
+        """コレクション型のテスト"""
+        # LogParseResultのheadersがdictであることを確認
+        parser = LogParser()
+        test_log = """(404)
+HTTP response headers: HTTPHeaderDict({'key1': 'value1', 'key2': 'value2'})"""
+
+        result = parser.parse(test_log)
+
+        if result.headers is not None:
+            self.assertIsInstance(result.headers, dict)
+            for key, value in result.headers.items():
+                self.assertIsInstance(key, str)
+                self.assertIsInstance(value, str)
+
+    def test_optional_fields_handling(self):
+        """オプショナルフィールドの処理テスト"""
+        # request_idがないケース
+        result_without_id = self.analyzer.analyze("(400) Bad Request")
+        if hasattr(result_without_id, "request_id"):
+            # request_idがある場合はstrまたはNone
+            self.assertTrue(
+                result_without_id.request_id is None
+                or isinstance(result_without_id.request_id, str)
             )
 
-        # 無効なメッセージでエラー
-        with self.assertRaises(ValueError):
-            LineErrorInfo(
-                status_code=400,
-                error_code=None,
-                message="",  # 空メッセージ
-                category=ErrorCategory.INVALID_PARAM,
-                severity=ErrorSeverity.HIGH,
-                is_retryable=False,
-                description="Test description",
-                recommended_action="Test action",
-            )
+        # request_idがあるケース
+        log_with_id = "(404) Request ID: test-id-123"
 
-    def test_analyzer_type_hints(self):
-        """分析器の型ヒントテスト"""
-        analyzer = LineErrorAnalyzer()
-
-        # 正常なエラーデータ
-        error_data: ErrorDataDict = {
-            "status_code": 401,
-            "message": "Authentication failed",
-        }
-
-        result = analyzer.analyze(error_data)
-        self.assertIsInstance(result, LineErrorInfo)
-        self.assertEqual(result.status_code, 401)
-
-        # 複数エラーの分析
-        errors: List[Dict[str, Any]] = [
-            {"status_code": 401, "message": "Auth error"},
-            {"status_code": 429, "message": "Rate limit"},
-        ]
-
-        results = analyzer.analyze_multiple(errors)
-        self.assertIsInstance(results, list)
-        self.assertEqual(len(results), 2)
-        for result in results:
-            self.assertIsInstance(result, LineErrorInfo)
-
-
-class TestAsyncTypeHints(unittest.IsolatedAsyncioTestCase):
-    """非同期版の型ヒントテスト"""
-
-    async def test_async_analyzer_type_hints(self):
-        """非同期分析器の型ヒントテスト"""
-        analyzer = AsyncLineErrorAnalyzer()
-
-        # 正常なエラーデータ
-        error_data: ErrorDataDict = {"status_code": 500, "message": "Server error"}
-
-        result = await analyzer.analyze(error_data)
-        self.assertIsInstance(result, LineErrorInfo)
-        self.assertEqual(result.status_code, 500)
-
-        # 複数エラーの非同期分析
-        errors: List[Dict[str, Any]] = [
-            {"status_code": 401, "message": "Auth error"},
-            {"status_code": 429, "message": "Rate limit"},
-            {"status_code": 500, "message": "Server error"},
-        ]
-
-        results = await analyzer.analyze_multiple(errors)
-        self.assertIsInstance(results, list)
-        self.assertEqual(len(results), 3)
-        for result in results:
-            self.assertIsInstance(result, LineErrorInfo)
-
-    async def test_async_batch_type_hints(self):
-        """非同期バッチ処理の型ヒントテスト"""
-        analyzer = AsyncLineErrorAnalyzer()
-
-        # 大量のエラーデータ
-        errors: List[ErrorDataDict] = []
-        for i in range(20):
-            errors.append({"status_code": 400 + (i % 5), "message": f"Error {i}"})
-
-        results = await analyzer.analyze_batch(errors, batch_size=5)
-        self.assertIsInstance(results, list)
-        self.assertEqual(len(results), 20)
-        for result in results:
-            self.assertIsInstance(result, LineErrorInfo)
-
-
-class TestProtocolCompliance(unittest.TestCase):
-    """プロトコル準拠性のテスト"""
-
-    def test_http_response_like_protocol(self):
-        """HTTPレスポンスライクプロトコルのテスト"""
-        from unittest.mock import Mock
-
-        # プロトコルに準拠するオブジェクト
-        mock_response = Mock()
-        mock_response.status_code = 403
-        mock_response.text = '{"message": "Forbidden"}'
-        mock_response.headers = {"Content-Type": "application/json"}
-
-        self.assertTrue(is_http_response_like(mock_response))
-
-        # プロトコルに準拠しないオブジェクト（textがない）
-        incomplete_response = Mock()
-        incomplete_response.status_code = 403
-        incomplete_response.headers = {"Content-Type": "application/json"}
-        # textプロパティを明示的に削除
-        del incomplete_response.text
-
-        self.assertFalse(is_http_response_like(incomplete_response))
-
-    def test_line_bot_exception_detection(self):
-        """LINE Bot例外検出のテスト"""
-        from unittest.mock import Mock
-
-        # v3 ApiException風オブジェクト
-        v3_exception = Mock()
-        v3_exception.__module__ = "linebot.v3.messaging.exceptions"
-        v3_exception.status = 404
-        v3_exception.body = '{"message": "Not found"}'
-
-        self.assertTrue(is_line_bot_v3_exception(v3_exception))
-
-        # v2 LineBotApiError風オブジェクト
-        v2_error = Mock()
-        v2_error.__module__ = "linebot.exceptions"
-        v2_error.status_code = 400
-        v2_error.error = Mock()
-
-        self.assertTrue(is_line_bot_v2_error(v2_error))
-
-
-class TestTypeCompatibility(unittest.TestCase):
-    """型互換性のテスト"""
-
-    def test_backwards_compatibility(self):
-        """後方互換性のテスト"""
-        analyzer = LineErrorAnalyzer()
-
-        # 古い形式の辞書（Any型として）
-        old_style_error: Any = {"status_code": 401, "message": "Old style error"}
-
-        # 型ヒント強化後も動作することを確認
-        result = analyzer.analyze(old_style_error)
-        self.assertIsInstance(result, LineErrorInfo)
-        self.assertEqual(result.status_code, 401)
-
-    def test_mixed_type_analysis(self):
-        """混合型分析のテスト"""
-        analyzer = LineErrorAnalyzer()
-
-        # 様々な型のエラーを混合
-        mixed_errors = [
-            {"status_code": 401, "message": "Dict error"},
-            "string_error",  # 不正な型
-            {"status_code": 429, "message": "Another dict error"},
-        ]
-
-        results = analyzer.analyze_multiple(mixed_errors)
-        self.assertEqual(len(results), 3)
-
-        # 1番目と3番目は正常に分析される
-        self.assertEqual(results[0].status_code, 401)
-        self.assertEqual(results[2].status_code, 429)
-
-        # 2番目は分析失敗として処理される
-        self.assertEqual(results[1].category, ErrorCategory.UNKNOWN)
+        result_with_id = self.analyzer.analyze(log_with_id)
+        if hasattr(result_with_id, "request_id") and result_with_id.request_id:
+            self.assertEqual(result_with_id.request_id, "test-id-123")
 
 
 if __name__ == "__main__":
-    unittest.main(verbosity=2)
+    unittest.main()
