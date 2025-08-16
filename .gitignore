@@ -133,6 +133,14 @@ Thumbs.db
 # GitHub Actions
 .github/workflows/secrets.yml
 
-# PyPI公開関連
+# PyPI-related (local artifacts)
 *.tar.gz
 twine.log
+
+# Development/test files (feature-branch only)
+# These are intentionally excluded from main branch. If you need to
+# include branch-local test files, keep them only on the feature branch.
+simple_test.py
+test_api_specific.py
+test_comprehensive.py
+test_real_error.py
