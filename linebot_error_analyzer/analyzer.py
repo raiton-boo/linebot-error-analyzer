@@ -91,10 +91,23 @@ class LineErrorAnalyzer(BaseLineErrorAnalyzer):
         except UnsupportedErrorTypeError:
             # サポート対象外エラーは再発生させて上位に委ねる
             raise
+        except AnalyzerError:
+            # 既にラップされたエラーは再発生
+            raise
         except Exception as e:
-            # 予期しないエラーはAnalyzerErrorでラップして詳細情報を付加
-            raise AnalyzerError(
-                f"Failed to analyze error: {str(e)}. Error type: {type(error)}", e
+            # 予期しないエラー: フォールバック情報を返す（サービス継続性重視）
+            return LineErrorInfo(
+                status_code=0,
+                message=f"Analysis failed: {str(e)}",
+                category=ErrorCategory.UNKNOWN,
+                is_retryable=False,
+                description="エラー分析処理中に予期しない問題が発生しました",
+                recommended_action="エラー詳細を確認し、必要に応じてサポートに連絡してください",
+                raw_error={
+                    "original_error": str(error),
+                    "analysis_error": str(e),
+                    "error_type": str(type(error)),
+                },
             )
 
     # SDK バージョン別分析メソッド

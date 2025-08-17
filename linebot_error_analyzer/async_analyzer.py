@@ -82,13 +82,13 @@ class AsyncLineErrorAnalyzer(BaseLineErrorAnalyzer):
                 )
 
         except UnsupportedErrorTypeError:
+            # サポート対象外エラーは上位に委ねる
+            raise
+        except AnalyzerError:
+            # 既にラップされたエラーは再発生
             raise
         except Exception as e:
-            raise AnalyzerError(f"Failed to analyze error: {str(e)}", e)
-
-            # 非同期版分析メソッド
-            return await self.analyze(error)
-        except Exception as e:
+            # 予期しない例外: フォールバック情報を返す（サービス継続性重視）
             return self._create_info(
                 status_code=0,
                 message=f"Analysis failed: {str(e)}",
