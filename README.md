@@ -1,4 +1,4 @@
-# 🤖 LINE Bot Error Analyzer
+# 🤖 LINE Bot Error Analyzer (Document write by Copilot)
 
 [![PyPI version](https://badge.fury.io/py/linebot-error-analyzer.svg)](https://badge.fury.io/py/linebot-error-analyzer)
 [![Python](https://img.shields.io/pypi/pyversions/linebot-error-analyzer.svg)](https://pypi.org/project/linebot-error-analyzer/)
